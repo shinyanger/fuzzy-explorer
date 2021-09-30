@@ -1,0 +1,52 @@
+{
+    "commands": [
+        {
+            "id": "home",
+            "type": "common",
+            "description": "go to home directory",
+            "expression": "Set-Location ~"
+        },
+        {
+            "id": "root",
+            "type": "common",
+            "description": "go to root directory",
+            "expression": "Set-Location /"
+        },
+        {
+            "id": "push",
+            "type": "common",
+            "description": "push current path to stack",
+            "expression": "Push-Location"
+        },
+        {
+            "id": "pop",
+            "type": "common",
+            "description": "pop last path from stack",
+            "expression": "Pop-Location"
+        },
+        {
+            "id": "clip",
+            "type": "common",
+            "description": "set current path to clipboard",
+            "expression": "Set-Clipboard -Value $PWD.ToString()"
+        },
+        {
+            "id": ["exp", "reveal"],
+            "type": "file",
+            "description": "reveal '{0}' in file explorer",
+            "expression": "Invoke-Item ."
+        },
+        {
+            "id": "vi",
+            "type": "file",
+            "description": "open '{0}' with vi",
+            "expression": "vi {0}"
+        },
+        {
+            "id": "code",
+            "type": "file",
+            "description": "open '{0}' with code",
+            "expression": "code --new-window {0}"
+        }
+    ]
+}
