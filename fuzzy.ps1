@@ -256,7 +256,7 @@ function ProcessCommand {
             break
         }
         "unmark" {
-            $register.bookmark.Remove($PWD.ToString())
+            $register.bookmark.Remove($PWD.ToString()) | Out-Null
             break
         }
         "edit" {
