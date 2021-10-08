@@ -37,8 +37,12 @@ function SortDir {
         [array]$items
     )
     switch ($settings.sortBy) {
-        "nameasc" {
+        "default" {
             $items
+            break
+        }
+        "nameasc" {
+            $items | Sort-Object -Property Name
             break
         }
         "namedesc" {

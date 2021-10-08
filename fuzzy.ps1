@@ -332,6 +332,7 @@ function ChangeSetting {
         @{ id = "nohidden"; description = "show hidden files off" }
     )
     $sortSettings = @(
+        @{ id = "default"; description = "sort by default" }
         @{ id = "nameasc"; description = "sort by name ascending" }
         @{ id = "namedesc"; description = "sort by name descending" }
         @{ id = "sizeasc"; description = "sort by size ascending" }
