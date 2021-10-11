@@ -23,7 +23,7 @@ Clone this repo and run `fuzzy.ps1`.
 It is recommended to add a function to your `$PROFILE`:
 ```
 function fe {
-    & (some_path...)/fuzzy-explorer/fuzzy.ps1
+    & path/to/fuzzy-explorer/fuzzy.ps1
 }
 ```
 
