@@ -187,6 +187,9 @@ function ListCommands {
         $ids = [string[]]($command.id)
         foreach ($id in $ids) {
             $display = "{0,-12} : {1}" -f "[${id}]", $command.description
+            if ($command.shortcut) {
+                $display += " <$($command.shortcut)>"
+            }
             @{ id = $id; display = $display }
         }
     }
