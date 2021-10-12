@@ -38,5 +38,8 @@ f5    | refresh directory
 
 ## Advanced
 ### Extension
-You may add custom commands in extensions.json.
-if `type` is `file`, the identifier `{0}` in `description` and `expression` will be replaced by selected file's name.
+You may add custom commands in `extensions.json`.
+
+If `type` is `file`, the identifier `{0}` in `description` and `expression` will be replaced by selected file's name.
+
+The shortcut format need to follow `fzf`'s.
