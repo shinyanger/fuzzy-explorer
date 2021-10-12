@@ -19,25 +19,34 @@ function ListDirectory {
         operation    = [string]::Empty
         selectedFile = $null
     }
-    $entries = GetDirHeader | ForEach-Object { @{ name = $null; details = $PSItem } }
-    $entries += & {
-        $item = Get-Item .
-        $outstr = $item | Format-Table -HideTableHeaders | Out-String
-        $fields = $outstr -split [System.Environment]::NewLine
-        $row = $fields[3] -replace "(.+)$($item.Name)", "`$1.."
-        return @{ name = ".."; details = $row }
+    $entries = & {
+        $entries = GetDirHeader | ForEach-Object { @{ name = $null; details = $PSItem } }
+        $entries += & {
+            $item = Get-Item . -Force
+            $outstr = $item | Format-Table -HideTableHeaders | Out-String
+            $fields = $outstr -split [System.Environment]::NewLine
+            $row = $fields[3] -replace "(.+)$($item.Name)", "`$1.."
+            @{ name = ".."; details = $row }
+        }
+        $items = & {
+            $attributes = GetDirAttributes
+            $items = Get-ChildItem -Force -Attributes $attributes
+            $items = SortDir $items
+            $items
+        }
+        $rows = [string[]](GetDirRows $items)
+        $entries += for ($i = 0; $i -lt $items.Count; $i++) {
+            @{ name = $items[$i].Name; details = $rows[$i] }
+        }
+        $entries
     }
-    $attributes = GetDirAttributes
-    $items = Get-ChildItem -Force -Attributes $attributes
-    $items = SortDir $items
-    $rows = [string[]](GetDirRows $items)
-    $entries += for ($i = 0; $i -lt $items.Count; $i++) {
-        @{ name = $items[$i].Name; details = $rows[$i] }
-    }
-    $location = $PWD.ToString()
-    $location = $location.Replace($HOME, "~")
-    if ($location.Length -gt 80) {
-        $location = "..." + ($location[-80..-1] -join "")
+    $location = & {
+        $location = $PWD.ToString()
+        $location = $location.Replace($HOME, "~")
+        if ($location.Length -gt 80) {
+            $location = "..." + ($location[-80..-1] -join "")
+        }
+        $location
     }
     $fzfParams = @(
         "--height=80%",
