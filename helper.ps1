@@ -6,19 +6,22 @@ function Preview {
         [string]$fileName,
         [int]$line
     )
-    $selectedFile = Get-Item $fileName -Force -ErrorAction SilentlyContinue
-    if (-not $?) {
-        $fileNames = $fileName -split " -> "
-        $fileName = $fileNames[0]
-        $selectedFile = Get-Item $fileName -Force
+    $selectedFile = & {
+        $selectedFile = Get-Item $fileName -Force -ErrorAction SilentlyContinue
+        if (-not $?) {
+            $fileNames = $fileName -split " -> "
+            $fileName = $fileNames[0]
+            $selectedFile = Get-Item $fileName -Force
+        }
+        $selectedFile
     }
     if ($selectedFile.PSIsContainer) {
         $script:settings = Get-Content $tempSettingsFile | ConvertFrom-Json
         $attributes = GetDirAttributes
         $items = Get-ChildItem $selectedFile -Force -Attributes $attributes
-        $items = SortDir $items
         if ($?) {
             GetDirHeader
+            $items = SortDir $items
             GetDirRows $items
         }
     }
@@ -67,11 +70,14 @@ function FuzzyHelper {
             break
         }
         "search" {
-            if ($args.Count -gt 2) {
-                $query = $args[2]
-            }
-            if (-not $query) {
-                $query = "^"
+            $query = & {
+                if ($args.Count -gt 2) {
+                    $query = $args[2]
+                }
+                if (-not $query) {
+                    $query = "^"
+                }
+                $query
             }
             $output = Get-ChildItem -File -Recurse -Attributes !System | Select-String -Pattern $query
             if ($output) {
