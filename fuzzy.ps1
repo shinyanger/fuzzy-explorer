@@ -324,8 +324,7 @@ function ProcessCommand {
                     $register.clipMode = [ClipboardMode]::None
                     break
                 }
-                ([ClipboardMode]::None) {
-                }
+                ([ClipboardMode]::None) {}
                 Default {}
             }
             break
@@ -344,26 +343,29 @@ function ProcessCommand {
 }
 
 function ChangeSetting {
-    $displaySettings = @(
-        @{ id = "preview"; description = "show preview window on" }
-        @{ id = "nopreview"; description = "show preview window off" }
-        @{ id = "hidden"; description = "show hidden files on" }
-        @{ id = "nohidden"; description = "show hidden files off" }
-    )
-    $sortSettings = @(
-        @{ id = "default"; description = "sort by default" }
-        @{ id = "nameasc"; description = "sort by name ascending" }
-        @{ id = "namedesc"; description = "sort by name descending" }
-        @{ id = "sizeasc"; description = "sort by size ascending" }
-        @{ id = "sizedesc"; description = "sort by size descending" }
-        @{ id = "timeasc"; description = "sort by time ascending" }
-        @{ id = "timedesc"; description = "sort by time descending" }
-    )
-    $displaySettings += foreach ($setting in $sortSettings) {
-        @{ id = "sort=$($setting.id)"; description = $setting.description }
-    }
-    if ($env:EDITOR) {
-        $displaySettings += @{ id = "all"; description = "edit settings file" }
+    $displaySettings = & {
+        $displaySettings = @(
+            @{ id = "preview"; description = "show preview window on" }
+            @{ id = "nopreview"; description = "show preview window off" }
+            @{ id = "hidden"; description = "show hidden files on" }
+            @{ id = "nohidden"; description = "show hidden files off" }
+        )
+        $sortSettings = @(
+            @{ id = "default"; description = "sort by default" }
+            @{ id = "nameasc"; description = "sort by name ascending" }
+            @{ id = "namedesc"; description = "sort by name descending" }
+            @{ id = "sizeasc"; description = "sort by size ascending" }
+            @{ id = "sizedesc"; description = "sort by size descending" }
+            @{ id = "timeasc"; description = "sort by time ascending" }
+            @{ id = "timedesc"; description = "sort by time descending" }
+        )
+        $displaySettings += foreach ($setting in $sortSettings) {
+            @{ id = "sort=$($setting.id)"; description = $setting.description }
+        }
+        if ($env:EDITOR) {
+            $displaySettings += @{ id = "all"; description = "edit settings file" }
+        }
+        $displaySettings
     }
     foreach ($setting in $displaySettings) {
         $setting.display = "{0,-12} : {1}" -f "[$($setting.id)]", $setting.description
