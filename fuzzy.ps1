@@ -52,6 +52,10 @@ function ListDirectory {
         $expect = "left,right,:,f5"
         $internalShortcuts = "ctrl-q,ctrl-e,ctrl-p,ctrl-j,del,f1,f2"
         $expect += ",${internalShortcuts}"
+        $externalShortcuts = $extensions.commands.shortcut.Where({ $PSItem }) -join ","
+        if ($externalShortcuts) {
+            $expect += ",${externalShortcuts}"
+        }
         $expect
     }
     $fzfParams = @(
@@ -152,7 +156,7 @@ function ListCommands {
     }
     $commands += foreach ($command in $extensions.commands) {
         if ($command.type -eq "common") {
-            @{ id = $command.id; description = $command.description }
+            $command
         }
     }
     if ($selectedFile) {
@@ -169,7 +173,7 @@ function ListCommands {
             }
             $fileCommands += foreach ($command in $extensions.commands) {
                 if ($command.type -eq "file") {
-                    @{ id = $command.id; description = $command.description }
+                    $command
                 }
             }
             $fileCommands

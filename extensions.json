@@ -34,6 +34,7 @@
             "id": ["exp", "reveal"],
             "type": "file",
             "description": "reveal '{0}' in file explorer",
+            "shortcut": "ctrl-r",
             "expression": "Invoke-Item ."
         },
         {
