@@ -76,7 +76,9 @@ function ListDirectory {
         }
         $entry = $entries.Where( { $PSItem.details -eq $output[1] } )
         $result.operation = $output[0]
-        $result.selectedFile = Get-Item $entry.name -Force
+        if ($entry.name -ne "..") {
+            $result.selectedFile = Get-Item $entry.name -Force
+        }
     }
     else {
         $result.operation = $output
