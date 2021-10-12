@@ -188,7 +188,7 @@ function ListCommands {
     $displayCommands = foreach ($command in $commands) {
         $ids = [string[]]($command.id)
         foreach ($id in $ids) {
-            $display = "{0,-12} : {1}" -f "[${id}]", $command.description
+            $display = "{0,-15} : {1}" -f "[${id}]", $command.description
             if ($command.shortcut) {
                 $display += " <`e[38;5;1m$($command.shortcut)`e[0m>"
             }
@@ -391,7 +391,7 @@ function ChangeSetting {
         $displaySettings
     }
     foreach ($setting in $displaySettings) {
-        $setting.display = "{0,-12} : {1}" -f "[$($setting.id)]", $setting.description
+        $setting.display = "{0,-15} : {1}" -f "[$($setting.id)]", $setting.description
     }
     $fzfParams = @("--height=40%", "--prompt=:${PSItem} ")
     $output = $displaySettings.display | fzf $fzfDefaultParams $fzfParams
