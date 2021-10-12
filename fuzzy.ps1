@@ -140,20 +140,23 @@ function ListCommands {
         }
     }
     if ($selectedFile) {
-        $fileCommands = @(
-            @{ id = ("cp", "copy"); description = "mark '{0}' for copy" }
-            @{ id = ("mv", "move", "cut"); description = "mark '{0}' for move" }
-            @{ id = ("ln", "link"); description = "mark '{0}' for link" }
-            @{ id = ("rm", "remove", "del"); description = "remove '{0}'" }
-            @{ id = "ren"; description = "rename '{0}'" }
-        )
-        if ($env:EDITOR) {
-            $fileCommands += @{ id = "edit"; description = "open '{0}' with editor" }
-        }
-        $fileCommands += foreach ($command in $extensions.commands) {
-            if ($command.type -eq "file") {
-                @{ id = $command.id; description = $command.description }
+        $fileCommands = & {
+            $fileCommands = @(
+                @{ id = ("cp", "copy"); description = "mark '{0}' for copy" }
+                @{ id = ("mv", "move", "cut"); description = "mark '{0}' for move" }
+                @{ id = ("ln", "link"); description = "mark '{0}' for link" }
+                @{ id = ("rm", "remove", "del"); description = "remove '{0}'" }
+                @{ id = "ren"; description = "rename '{0}'" }
+            )
+            if ($env:EDITOR) {
+                $fileCommands += @{ id = "edit"; description = "open '{0}' with editor" }
             }
+            $fileCommands += foreach ($command in $extensions.commands) {
+                if ($command.type -eq "file") {
+                    @{ id = $command.id; description = $command.description }
+                }
+            }
+            $fileCommands
         }
         $commands += foreach ($command in $fileCommands) {
             @{ id = $command.id; description = $command.description -f $selectedFile.Name }
