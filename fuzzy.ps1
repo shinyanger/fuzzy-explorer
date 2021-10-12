@@ -37,7 +37,7 @@ function ListDirectory {
     $location = $PWD.ToString()
     $location = $location.Replace($HOME, "~")
     if ($location.Length -gt 80) {
-        $location = ".." + ($location[-80..-1] -join "")
+        $location = "..." + ($location[-80..-1] -join "")
     }
     $fzfParams = @(
         "--height=80%",
