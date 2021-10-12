@@ -154,11 +154,7 @@ function ListCommands {
     else {
         $commands += @{ id = "mark"; description = "add current path in bookmark" }
     }
-    $commands += foreach ($command in $extensions.commands) {
-        if ($command.type -eq "common") {
-            $command
-        }
-    }
+    $commands += $extensions.commands.Where({ $PSItem.type -eq "common" })
     if ($selectedFile) {
         $fileCommands = & {
             $fileCommands = @(
@@ -171,11 +167,7 @@ function ListCommands {
             if ($env:EDITOR) {
                 $fileCommands += @{ id = "edit"; description = "open '{0}' with editor"; shortcut = "ctrl-e" }
             }
-            $fileCommands += foreach ($command in $extensions.commands) {
-                if ($command.type -eq "file") {
-                    $command
-                }
-            }
+            $fileCommands += $extensions.commands.Where({ $PSItem.type -eq "file" })
             $fileCommands
         }
         $commands += foreach ($command in $fileCommands) {
