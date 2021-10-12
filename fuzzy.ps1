@@ -395,6 +395,9 @@ function ChangeSetting {
     }
     $fzfParams = @("--height=40%", "--prompt=:${PSItem} ")
     $output = $displaySettings.display | fzf $fzfDefaultParams $fzfParams
+    if (-not $output) {
+        return
+    }
     $displaySetting = $displaySettings.Where( { $PSItem.display -eq $output } )
     switch ($displaySetting.id) {
         { $PSItem.EndsWith("preview") } {
@@ -416,9 +419,7 @@ function ChangeSetting {
         }
         Default {}
     }
-    if ($output) {
-        $settings | ConvertTo-Json | Out-File -FilePath $tempSettingsFile
-    }
+    $settings | ConvertTo-Json | Out-File -FilePath $tempSettingsFile
 }
 
 function Initialize {
