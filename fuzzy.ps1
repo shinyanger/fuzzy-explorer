@@ -188,12 +188,12 @@ function ListCommands {
         foreach ($id in $ids) {
             $display = "{0,-12} : {1}" -f "[${id}]", $command.description
             if ($command.shortcut) {
-                $display += " <$($command.shortcut)>"
+                $display += " <`e[38;5;1m$($command.shortcut)`e[0m>"
             }
             @{ id = $id; display = $display }
         }
     }
-    $fzfParams = @("--height=40%", "--nth=1", "--prompt=:", "--exact")
+    $fzfParams = @("--height=40%", "--nth=1", "--prompt=:", "--exact", "--ansi")
     $output = $displayCommands.display | fzf $fzfDefaultParams $fzfParams
     $displayCommand = $displayCommands.Where( { $PSItem.display -eq $output } )
     return $displayCommand.id

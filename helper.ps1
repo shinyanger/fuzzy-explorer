@@ -38,7 +38,7 @@ function Preview {
         $lineFormat = "`e[38;5;238m{0,4}`e[0m {1}"
         $formatter = { $lineFormat -f ($PSItem + 1), $content[$PSItem] }
         if ($line) {
-            $hlFormat = "`e[48;5;236m{0}`e[m"
+            $hlFormat = "`e[48;5;236m{0}`e[0m"
             $content = [string[]](Get-Content $fileName -ReadCount 0)
             $count = $content.Length
             if ($line -gt 1) {
