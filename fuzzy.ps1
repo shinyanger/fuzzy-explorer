@@ -48,13 +48,19 @@ function ListDirectory {
         }
         $location
     }
+    $expect = & {
+        $expect = "left,right,:,f5"
+        $internalShortcuts = "ctrl-q,ctrl-e,ctrl-p,ctrl-j,del,f1,f2"
+        $expect += ",${internalShortcuts}"
+        $expect
+    }
     $fzfParams = @(
         "--height=80%",
         "--header-lines=2",
         "--nth=3..",
         "--delimiter=\s{2,}\d*\s",
         "--prompt=${location}> ",
-        "--expect=left,right,:,f5"
+        "--expect=${expect}"
     )
     if ($settings.preview) {
         $fzfParams += "--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {3..}"
@@ -79,7 +85,10 @@ function ProcessOperation {
         [string]$operation,
         [System.IO.FileSystemInfo]$selectedFile
     )
-    $result = $false
+    $result = [PSCustomObject]@{
+        commandMode = $false
+        shortcut    = [string]::Empty
+    }
     switch ($operation) {
         "enter" {
             if (-not $selectedFile.PSIsContainer) {
@@ -105,28 +114,35 @@ function ProcessOperation {
             break
         }
         ":" {
-            $result = $true
+            $result.commandMode = $true
             break
         }
-        "f5" {}
-        Default {}
+        "f5" {
+            break
+        }
+        Default {
+            $result.commandMode = $true
+            $result.shortcut = $PSItem
+            break
+        }
     }
     return $result
 }
 
 function ListCommands {
     param (
+        [string]$shortcut,
         [System.IO.FileSystemInfo]$selectedFile
     )
     $commands = @(
-        @{ id = "help"; description = "print help" }
-        @{ id = ("quit", "exit"); description = "quit explorer" }
+        @{ id = "help"; description = "print help"; shortcut = "f1" }
+        @{ id = ("quit", "exit"); description = "quit explorer"; shortcut = "ctrl-q" }
         @{ id = "set"; description = "change setting" }
         @{ id = ("new", "touch"); description = "create new file" }
         @{ id = "mkdir"; description = "create new directory" }
-        @{ id = ("fd", "find"); description = "find file/directory" }
+        @{ id = ("fd", "find"); description = "find file/directory"; shortcut = "ctrl-p" }
         @{ id = ("rg", "grep", "search"); description = "search files contents" }
-        @{ id = "jump"; description = "go to path in bookmark" }
+        @{ id = "jump"; description = "go to path in bookmark"; shortcut = "ctrl-j" }
     )
     if ($register.bookmark.Contains($PWD.ToString())) {
         $commands += @{ id = "unmark"; description = "remove current path in bookmark" }
@@ -145,11 +161,11 @@ function ListCommands {
                 @{ id = ("cp", "copy"); description = "mark '{0}' for copy" }
                 @{ id = ("mv", "move", "cut"); description = "mark '{0}' for move" }
                 @{ id = ("ln", "link"); description = "mark '{0}' for link" }
-                @{ id = ("rm", "remove", "del"); description = "remove '{0}'" }
-                @{ id = "ren"; description = "rename '{0}'" }
+                @{ id = ("rm", "remove", "del"); description = "remove '{0}'"; shortcut = "del" }
+                @{ id = "ren"; description = "rename '{0}'"; shortcut = "f2" }
             )
             if ($env:EDITOR) {
-                $fileCommands += @{ id = "edit"; description = "open '{0}' with editor" }
+                $fileCommands += @{ id = "edit"; description = "open '{0}' with editor"; shortcut = "ctrl-e" }
             }
             $fileCommands += foreach ($command in $extensions.commands) {
                 if ($command.type -eq "file") {
@@ -159,11 +175,17 @@ function ListCommands {
             $fileCommands
         }
         $commands += foreach ($command in $fileCommands) {
-            @{ id = $command.id; description = $command.description -f $selectedFile.Name }
+            $command.description = $command.description -f $selectedFile.Name
+            $command
         }
     }
     if ($register.clipboard) {
         $commands += @{ id = "paste"; description = "paste '$($register.clipboard.FullName)' in current directory" }
+    }
+    if ($shortcut) {
+        $command = $commands.Where( { $PSItem.shortcut -eq $shortcut } )
+        $commandId = ([string[]]($command.id))[0]
+        return $commandId
     }
     $displayCommands = foreach ($command in $commands) {
         $ids = [string[]]($command.id)
@@ -425,9 +447,11 @@ function FuzzyExplorer {
         $result = ListDirectory
         $operation = $result.operation
         $selectedFile = $result.selectedFile
-        $commandMode = ProcessOperation $operation $selectedFile
+        $result = ProcessOperation $operation $selectedFile
+        $commandMode = $result.commandMode
+        $shortcut = $result.shortcut
         if ($commandMode) {
-            $commandId = ListCommands $selectedFile
+            $commandId = ListCommands $shortcut $selectedFile
             ProcessCommand $commandId $selectedFile
         }
     }
