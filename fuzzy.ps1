@@ -20,6 +20,13 @@ function ListDirectory {
         selectedFile = $null
     }
     $entries = GetDirHeader | ForEach-Object { @{ name = $null; details = $PSItem } }
+    $entries += & {
+        $item = Get-Item .
+        $outstr = $item | Format-Table -HideTableHeaders | Out-String
+        $fields = $outstr -split [System.Environment]::NewLine
+        $row = $fields[3] -replace "(.+)$($item.Name)", "`$1.."
+        return @{ name = ".."; details = $row }
+    }
     $attributes = GetDirAttributes
     $items = Get-ChildItem -Force -Attributes $attributes
     $items = SortDir $items
