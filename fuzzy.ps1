@@ -291,7 +291,7 @@ function ProcessCommand {
                 $fzfParams += "--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {}"
             }
             $location = $register.bookmark | fzf $fzfDefaultParams $fzfParams
-            if ($location) {
+            if ($LASTEXITCODE -eq 0) {
                 Set-Location $location
             }
             break
@@ -398,7 +398,7 @@ function ChangeSetting {
     }
     $fzfParams = @("--height=40%", "--prompt=:${PSItem} ")
     $output = $displaySettings.display | fzf $fzfDefaultParams $fzfParams
-    if (-not $output) {
+    if ($LASTEXITCODE -ne 0) {
         return
     }
     $displaySetting = $displaySettings.Where( { $PSItem.display -eq $output } )
