@@ -25,7 +25,8 @@ function ListDirectory {
             $item = Get-Item . -Force
             $outstr = $item | Format-Table -HideTableHeaders | Out-String
             $fields = $outstr -split [System.Environment]::NewLine
-            $row = $fields[3] -replace "(.+)$($item.Name)", "`$1.."
+            $name = $item.Name.Replace("\", "\\")
+            $row = $fields[3] -replace "(.+)${name}", "`$1.."
             $display = ColorizeRows $item $row
             @{ name = ".."; details = $row; display = $display }
         }
