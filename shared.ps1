@@ -1,9 +1,39 @@
+$fgCode = "38;5;"
+$bgCode = "48;5;"
+
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUserDeclaredVarsMoreThanAssignments", "")]
+$colors = [PSCustomObject]@{
+    shortcut = 1
+    highlight = 236
+    lineNumber = 238
+}
+
 function IsProgramInstalled {
     param (
         [string]$program
     )
     Get-Command -Name $program -ErrorAction SilentlyContinue | Out-Null
     return $?
+}
+
+function FormatColor {
+    param (
+        [string]$str,
+        [short]$FgColor = -1,
+        [short]$BgColor = -1
+    )
+    if (($FgColor -ge 0) -and ($BgColor -ge 0)) {
+        "`e[${fgCode}${FgColor};${bgCode}${BgColor}m${str}`e[0m"
+    }
+    elseif (($FgColor -ge 0)) {
+        "`e[${fgCode}${FgColor}m${str}`e[0m"
+    }
+    elseif ($BgColor -ge 0) {
+        "`e[${bgCode}${BgColor}m${str}`e[0m"
+    }
+    else {
+        $str
+    }
 }
 
 function GetDirHeader {

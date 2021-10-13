@@ -35,16 +35,15 @@ function Preview {
         }
     }
     else {
-        $lineFormat = "`e[38;5;238m{0,4}`e[0m {1}"
+        $lineFormat = (FormatColor "{0,4}" -FgColor $colors.lineNumber) + " {1}"
         $formatter = { $lineFormat -f ($PSItem + 1), $content[$PSItem] }
         if ($line) {
-            $hlFormat = "`e[48;5;236m{0}`e[0m"
             $content = [string[]](Get-Content $fileName -ReadCount 0)
             $count = $content.Length
             if ($line -gt 1) {
                 0..($line - 2) | ForEach-Object { & $formatter }
             }
-            $lineFormat -f $line, ($hlFormat -f $content[$line - 1])
+            $lineFormat -f $line, (FormatColor $content[$line - 1] -BgColor $colors.highlight)
             if ($line -lt $count) {
                 $line..($count - 1) | ForEach-Object { & $formatter }
             }

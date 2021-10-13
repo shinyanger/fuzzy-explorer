@@ -190,7 +190,7 @@ function ListCommands {
         foreach ($id in $ids) {
             $display = "{0,-15} : {1}" -f "[${id}]", $command.description
             if ($command.shortcut) {
-                $display += " <`e[38;5;1m$($command.shortcut)`e[0m>"
+                $display += (" <{0}>" -f (FormatColor $command.shortcut -FgColor $colors.shortcut))
             }
             $display
         }
