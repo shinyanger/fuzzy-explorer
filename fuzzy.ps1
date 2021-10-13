@@ -52,7 +52,7 @@ function ListDirectory {
         $expect = "left,right,:,f5"
         $internalShortcuts = "ctrl-q,ctrl-e,ctrl-p,ctrl-j,del,f1,f2"
         $expect += ",${internalShortcuts}"
-        $externalShortcuts = $extensions.commands.shortcut.Where({ $PSItem }) -join ","
+        $externalShortcuts = $extensions.commands.shortcut.Where( { $PSItem } ) -join ","
         if ($externalShortcuts) {
             $expect += ",${externalShortcuts}"
         }
@@ -156,7 +156,7 @@ function ListCommands {
     else {
         $commands += @{ id = "mark"; description = "add current path in bookmark" }
     }
-    $commands += $extensions.commands.Where({ $PSItem.type -eq "common" })
+    $commands += $extensions.commands.Where( { $PSItem.type -eq "common" } )
     if ($selectedFile) {
         $fileCommands = & {
             $fileCommands = @(
@@ -169,7 +169,7 @@ function ListCommands {
             if ($env:EDITOR) {
                 $fileCommands += @{ id = "edit"; description = "open '{0}' with editor"; shortcut = "ctrl-e" }
             }
-            $fileCommands += $extensions.commands.Where({ $PSItem.type -eq "file" })
+            $fileCommands += $extensions.commands.Where( { $PSItem.type -eq "file" } )
             $fileCommands
         }
         $commands += foreach ($command in $fileCommands) {
@@ -185,20 +185,23 @@ function ListCommands {
         $commandId = ([string[]]($command.id))[0]
         return $commandId
     }
-    $displayCommands = foreach ($command in $commands) {
+    $displays = foreach ($command in $commands) {
         $ids = [string[]]($command.id)
         foreach ($id in $ids) {
             $display = "{0,-15} : {1}" -f "[${id}]", $command.description
             if ($command.shortcut) {
                 $display += " <`e[38;5;1m$($command.shortcut)`e[0m>"
             }
-            @{ id = $id; display = $display }
+            $display
         }
     }
     $fzfParams = @("--height=40%", "--nth=1", "--prompt=:", "--exact", "--ansi")
-    $output = $displayCommands.display | fzf $fzfDefaultParams $fzfParams
-    $displayCommand = $displayCommands.Where( { $PSItem.display -eq $output } )
-    return $displayCommand.id
+    $output = $displays | fzf $fzfDefaultParams $fzfParams
+    if ($LASTEXITCODE -eq 0) {
+        $output -match "^\[(?<commandId>\w+)\]" | Out-Null
+        $commandId = $Matches["commandId"]
+        return $commandId
+    }
 }
 
 function ProcessCommand {
