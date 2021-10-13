@@ -36,7 +36,7 @@ function ListDirectory {
             $items
         }
         $rows = [string[]](GetDirRows $items)
-        $displays = ColorizeRows $items $rows
+        $displays = [string[]](ColorizeRows $items $rows)
         $entries += for ($i = 0; $i -lt $items.Count; $i++) {
             @{ name = $items[$i].Name; details = $rows[$i]; display = $displays[$i] }
         }
