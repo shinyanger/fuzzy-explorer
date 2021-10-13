@@ -369,14 +369,14 @@ function ProcessCommand {
 }
 
 function ChangeSetting {
-    $displaySettings = & {
-        $displaySettings = @(
+    $entries = & {
+        $entries = @(
             @{ id = "preview"; description = "show preview window on" }
             @{ id = "nopreview"; description = "show preview window off" }
             @{ id = "hidden"; description = "show hidden files on" }
             @{ id = "nohidden"; description = "show hidden files off" }
         )
-        $sortSettings = @(
+        $sortEntries = @(
             @{ id = "default"; description = "sort by default" }
             @{ id = "nameasc"; description = "sort by name ascending" }
             @{ id = "namedesc"; description = "sort by name descending" }
@@ -385,24 +385,26 @@ function ChangeSetting {
             @{ id = "timeasc"; description = "sort by time ascending" }
             @{ id = "timedesc"; description = "sort by time descending" }
         )
-        $displaySettings += foreach ($setting in $sortSettings) {
-            @{ id = "sort=$($setting.id)"; description = $setting.description }
+        $entries += foreach ($entry in $sortEntries) {
+            $entry.id = "sort=$($entry.id)"
+            $entry
         }
         if ($env:EDITOR) {
-            $displaySettings += @{ id = "all"; description = "edit settings file" }
+            $entries += @{ id = "all"; description = "edit settings file" }
         }
-        $displaySettings
+        $entries
     }
-    foreach ($setting in $displaySettings) {
-        $setting.display = "{0,-15} : {1}" -f "[$($setting.id)]", $setting.description
+    $displays = foreach ($entry in $entries) {
+        "{0,-15} : {1}" -f "[$($entry.id)]", $entry.description
     }
-    $fzfParams = @("--height=40%", "--prompt=:${PSItem} ")
-    $output = $displaySettings.display | fzf $fzfDefaultParams $fzfParams
+    $fzfParams = @("--height=40%", "--prompt=:${PSItem} ", "--exact")
+    $output = $displays | fzf $fzfDefaultParams $fzfParams
     if ($LASTEXITCODE -ne 0) {
         return
     }
-    $displaySetting = $displaySettings.Where( { $PSItem.display -eq $output } )
-    switch ($displaySetting.id) {
+    $output -match "^\[(?<entryId>\w+)\]" | Out-Null
+    $entryId = $Matches["entryId"]
+    switch ($entryId) {
         { $PSItem.EndsWith("preview") } {
             $settings.preview = -not $PSItem.StartsWith("no")
             break
