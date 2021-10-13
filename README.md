@@ -1,5 +1,6 @@
 # fuzzy-explorer
 TUI file explorer based on PowerShell and fzf.
+![snapshot](snapshot.png)
 
 ## Features
 * Cross platform.
