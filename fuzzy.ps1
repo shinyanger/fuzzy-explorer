@@ -130,8 +130,10 @@ function ProcessOperation {
             break
         }
         Default {
-            $result.commandMode = $true
-            $result.shortcut = $PSItem
+            if ($PSItem) {
+                $result.commandMode = $true
+                $result.shortcut = $PSItem
+            }
             break
         }
     }
