@@ -20,7 +20,7 @@ function ListDirectory {
         selectedFile = $null
     }
     $entries = & {
-        $entries = GetDirHeader | ForEach-Object { @{ name = $null; details = $PSItem; display = $PSItem } }
+        $entries = GetDirHeader | ForEach-Object { @{ name = [string]::Empty; details = $PSItem; display = $PSItem } }
         $entries += & {
             $item = Get-Item . -Force
             $outstr = $item | Format-Table -HideTableHeaders | Out-String
@@ -79,7 +79,7 @@ function ListDirectory {
         }
         $entry = $entries.Where( { $PSItem.details -eq $output[1] } )
         $result.operation = $output[0]
-        if ($entry.name -ne "..") {
+        if (($entry.name -ne "..") -or ($output[0] -ne ":")) {
             $result.selectedFile = Get-Item $entry.name -Force
         }
     }
