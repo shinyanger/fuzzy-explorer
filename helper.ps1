@@ -20,7 +20,7 @@ function Preview {
         $attributes = GetDirAttributes
         $items = Get-ChildItem $selectedFile -Force -Attributes $attributes
         if ($?) {
-            GetDirHeader
+            GetDirHeader | ForEach-Object { FormatColor $PSItem -FgColor $colors.header }
             $items = SortDir $items
             $rows = GetDirRows $items
             ColorizeRows $items $rows

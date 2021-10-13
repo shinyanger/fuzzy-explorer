@@ -6,6 +6,7 @@ $colors = [PSCustomObject]@{
     file = 10
     directory = 11
     hidden = 12
+    header = 109
     highlight = 236
     lineNumber = 238
 }
