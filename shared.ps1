@@ -1,9 +1,11 @@
 $fgCode = "38;5;"
 $bgCode = "48;5;"
 
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUserDeclaredVarsMoreThanAssignments", "")]
 $colors = [PSCustomObject]@{
     shortcut = 1
+    file = 10
+    directory = 11
+    hidden = 12
     highlight = 236
     lineNumber = 238
 }
@@ -59,6 +61,26 @@ function GetDirRows {
         $fields = $outStr.TrimEnd() -split [System.Environment]::NewLine
         $count = $fields.Count
         $fields[3..($count - 1)]
+    }
+}
+
+function ColorizeRows {
+    param (
+        [array]$items,
+        [array]$rows
+    )
+    for ($i = 0; $i -lt $items.Count; $i++) {
+        $item = $items[$i]
+        if ($item.Attributes -band [System.IO.FileAttributes]::Hidden) {
+            $rowColor = $colors.hidden
+        }
+        elseif ($item.PSIsContainer) {
+            $rowColor = $colors.directory
+        }
+        else {
+            $rowColor = $colors.file
+        }
+        FormatColor $rows[$i] -FgColor $rowColor
     }
 }
 

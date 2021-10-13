@@ -22,7 +22,8 @@ function Preview {
         if ($?) {
             GetDirHeader
             $items = SortDir $items
-            GetDirRows $items
+            $rows = GetDirRows $items
+            ColorizeRows $items $rows
         }
     }
     elseif (IsProgramInstalled "bat") {

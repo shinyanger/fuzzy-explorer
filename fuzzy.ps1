@@ -20,13 +20,14 @@ function ListDirectory {
         selectedFile = $null
     }
     $entries = & {
-        $entries = GetDirHeader | ForEach-Object { @{ name = $null; details = $PSItem } }
+        $entries = GetDirHeader | ForEach-Object { @{ name = $null; details = $PSItem; display = $PSItem } }
         $entries += & {
             $item = Get-Item . -Force
             $outstr = $item | Format-Table -HideTableHeaders | Out-String
             $fields = $outstr -split [System.Environment]::NewLine
             $row = $fields[3] -replace "(.+)$($item.Name)", "`$1.."
-            @{ name = ".."; details = $row }
+            $display = ColorizeRows $item $row
+            @{ name = ".."; details = $row; display = $display }
         }
         $items = & {
             $attributes = GetDirAttributes
@@ -35,8 +36,9 @@ function ListDirectory {
             $items
         }
         $rows = [string[]](GetDirRows $items)
+        $displays = ColorizeRows $items $rows
         $entries += for ($i = 0; $i -lt $items.Count; $i++) {
-            @{ name = $items[$i].Name; details = $rows[$i] }
+            @{ name = $items[$i].Name; details = $rows[$i]; display = $displays[$i] }
         }
         $entries
     }
@@ -64,12 +66,13 @@ function ListDirectory {
         "--nth=3..",
         "--delimiter=\s{2,}\d*\s",
         "--prompt=${location}> ",
+        "--ansi",
         "--expect=${expect}"
     )
     if ($settings.preview) {
         $fzfParams += "--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {3..}"
     }
-    $output = $entries.details | fzf $fzfDefaultParams $fzfParams
+    $output = $entries.display | fzf $fzfDefaultParams $fzfParams
     if ($LASTEXITCODE -eq 0) {
         if (-not $output[0]) {
             $output[0] = "enter"
