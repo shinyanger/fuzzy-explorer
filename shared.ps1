@@ -2,10 +2,10 @@ $fgCode = "38;5;"
 $bgCode = "48;5;"
 
 $colors = [PSCustomObject]@{
-    shortcut = 1
-    file = 10
-    directory = 11
-    hidden = 12
+    shortcut = 203
+    file = 48
+    directory = 81
+    hidden = 149
     header = 109
     highlight = 236
     lineNumber = 238
