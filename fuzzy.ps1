@@ -253,12 +253,20 @@ function ProcessCommand {
                 $fzfParams += "--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {}"
             }
             if (IsProgramInstalled "fd") {
-                $fdParams = @("--hidden", "--exclude", ".git", "--color=always")
+                $fdParams = @("--color=always")
                 $fzfParams += "--ansi"
-                fd $fdParams | fzf $fzfDefaultParams $fzfParams
+                $output = fd $fdParams | fzf $fzfDefaultParams $fzfParams
             }
             else {
-                fzf $fzfDefaultParams $fzfParams
+                $output = fzf $fzfDefaultParams $fzfParams
+            }
+            if ($LASTEXITCODE -eq 0) {
+                if ($env:EDITOR) {
+                    & $env:EDITOR $output
+                }
+                else {
+                    $output
+                }
             }
             break
         }
@@ -282,12 +290,22 @@ function ProcessCommand {
                 $reloadParams = $rgParams + "{q}"
                 $fzfParams += "--bind=change:reload:rg ${reloadParams}"
                 $initList = rg $initParams
-                $initList | fzf $fzfDefaultParams $fzfParams
+                $output = $initList | fzf $fzfDefaultParams $fzfParams
             }
             else {
                 $fzfParams += "--bind=change:reload:pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} search {q}"
                 $initList = & $helperFile $tempSettingsFile search
-                $initList | fzf $fzfDefaultParams $fzfParams
+                $output = $initList | fzf $fzfDefaultParams $fzfParams
+            }
+            if ($LASTEXITCODE -eq 0) {
+                $fields = $output -split ":"
+                $fileName = $fields[0]
+                if ($env:EDITOR) {
+                    & $env:EDITOR $fileName
+                }
+                else {
+                    $fileName
+                }
             }
             break
         }
