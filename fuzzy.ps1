@@ -179,7 +179,9 @@ function ListCommands {
             if ($env:EDITOR) {
                 $fileCommands += @{ id = "edit"; description = "open '{0}' with editor"; shortcut = "ctrl-e" }
             }
-            $fileCommands += $extensions.commands.Where( { $PSItem.type -eq "file" } )
+            $fileCommands += foreach ($command in $extensions.commands.Where( { $PSItem.type -eq "file" } )) {
+                $command.PSObject.Copy()
+            }
             $fileCommands
         }
         $commands += foreach ($command in $fileCommands) {
