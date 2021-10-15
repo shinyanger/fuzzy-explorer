@@ -6,14 +6,11 @@ function Preview {
         [string]$fileName,
         [int]$line
     )
-    $selectedFile = & {
-        $selectedFile = Get-Item $fileName -Force -ErrorAction SilentlyContinue
-        if (-not $?) {
-            $fileNames = $fileName -split " -> "
-            $fileName = $fileNames[0]
-            $selectedFile = Get-Item $fileName -Force
-        }
-        $selectedFile
+    $selectedFile = Get-Item $fileName -Force -ErrorAction SilentlyContinue
+    if (-not $?) {
+        $fileNames = $fileName -split " -> "
+        $fileName = $fileNames[0]
+        $selectedFile = Get-Item $fileName -Force
     }
     if ($selectedFile.PSIsContainer) {
         $script:settings = Get-Content $tempSettingsFile | ConvertFrom-Json
