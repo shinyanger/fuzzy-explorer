@@ -435,7 +435,7 @@ function ChangeSetting {
     if ($LASTEXITCODE -ne 0) {
         return
     }
-    $output -match "^\[(?<entryId>\w+)\]" | Out-Null
+    $output -match "^\[(?<entryId>.+)\]" | Out-Null
     $entryId = $Matches["entryId"]
     switch ($entryId) {
         { $PSItem.EndsWith("preview") } {
