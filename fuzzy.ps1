@@ -84,7 +84,7 @@ function ListDirectory {
         }
         $entry = $entries.Where( { $PSItem.details -eq $output[1] } )
         $result.operation = $output[0]
-        if (($entry.name -ne "..") -or ($output[0] -ne ":")) {
+        if (($entry.name -ne "..") -or (("enter", "right") -contains $output[0])) {
             $result.selectedFile = Get-Item $entry.name -Force
         }
     }
@@ -190,9 +190,12 @@ function ListCommands {
     if ($register.clipboard) {
         $commands += @{ id = "paste"; description = "paste '$($register.clipboard.FullName)' in current directory" }
     }
+    $commandId = [string]::Empty
     if ($shortcut) {
         $command = $commands.Where( { $PSItem.shortcut -eq $shortcut } )
-        $commandId = ([string[]]($command.id))[0]
+        if ($command) {
+            $commandId = ([string[]]($command.id))[0]
+        }
         return $commandId
     }
     $displays = foreach ($command in $commands) {
@@ -210,8 +213,8 @@ function ListCommands {
     if ($LASTEXITCODE -eq 0) {
         $output -match "^\[(?<commandId>\w+)\]" | Out-Null
         $commandId = $Matches["commandId"]
-        return $commandId
     }
+    return $commandId
 }
 
 function ProcessCommand {
@@ -485,8 +488,11 @@ function FuzzyExplorer {
         $result = ProcessOperation $operation $selectedFile
         $commandMode = $result.commandMode
         $shortcut = $result.shortcut
-        if ($commandMode) {
-            $commandId = ListCommands $shortcut $selectedFile
+        if (-not $commandMode) {
+            continue
+        }
+        $commandId = ListCommands $shortcut $selectedFile
+        if ($commandId) {
             ProcessCommand $commandId $selectedFile
         }
     }
