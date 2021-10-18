@@ -4,12 +4,14 @@
             "id": "home",
             "type": "common",
             "description": "go to home directory",
+            "shortcut": "home",
             "expression": "Set-Location ~"
         },
         {
             "id": "root",
             "type": "common",
             "description": "go to root directory",
+            "shortcut": "end",
             "expression": "Set-Location /"
         },
         {
