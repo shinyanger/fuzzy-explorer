@@ -58,10 +58,15 @@ function GetDirRows {
         [array]$items
     )
     if ($items) {
-        $outStr = $items | Format-Table -HideTableHeaders | Out-String
-        $fields = $outStr.TrimEnd() -split [System.Environment]::NewLine
-        $count = $fields.Count
-        $fields[3..($count - 1)]
+        if ($settings.showDetails) {
+            $outStr = $items | Format-Table -HideTableHeaders | Out-String
+            $fields = $outStr.TrimEnd() -split [System.Environment]::NewLine
+            $count = $fields.Count
+            $fields[3..($count - 1)]
+        }
+        else {
+            $items.Name
+        }
     }
 }
 

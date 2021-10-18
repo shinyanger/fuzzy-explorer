@@ -20,16 +20,18 @@ function ListDirectory {
         selectedFile = $null
     }
     $entries = & {
-        $entries = GetDirHeader | ForEach-Object { @{ name = [string]::Empty; details = $PSItem; display = $PSItem } }
+        $entries = @()
+        if ($settings.showDetails) {
+            $entries = GetDirHeader | ForEach-Object { @{ name = [string]::Empty; details = $PSItem; display = $PSItem } }
+        }
         $entries += & {
             $item = Get-Item . -Force
-            $outstr = $item | Format-Table -HideTableHeaders | Out-String
-            $fields = $outstr -split [System.Environment]::NewLine
-            $row = & {
-                $row = $fields[3]
-                $index = $row.LastIndexOf($item.Name)
-                $row = $row.Substring(0, $index) + ".."
-                $row
+            $row = ".."
+            if ($settings.showDetails) {
+                $outstr = $item | Format-Table -HideTableHeaders | Out-String
+                $fields = $outstr -split [System.Environment]::NewLine
+                $index = $fields[3].LastIndexOf($item.Name)
+                $row = $fields[3].Substring(0, $index) + ".."
             }
             $display = ColorizeRows $item $row
             @{ name = ".."; details = $row; display = $display }
@@ -67,15 +69,24 @@ function ListDirectory {
     }
     $fzfParams = @(
         "--height=80%",
-        "--header-lines=2",
-        "--nth=3..",
-        "--delimiter=\s{2,}\d*\s",
         "--prompt=${location}> ",
         "--ansi",
         "--expect=${expect}"
     )
-    if ($settings.preview) {
-        $fzfParams += "--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {3..}"
+    if ($settings.showDetails) {
+        $fzfParams += @(
+            "--header-lines=2",
+            "--nth=3..",
+            "--delimiter=\s{2,}\d*\s"
+        )
+        if ($settings.preview) {
+            $fzfParams += "--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {3..}"
+        }
+    }
+    else {
+        if ($settings.preview) {
+            $fzfParams += "--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {}"
+        }
     }
     $output = $entries.display | fzf $fzfDefaultParams $fzfParams
     if ($LASTEXITCODE -eq 0) {
