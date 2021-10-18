@@ -428,6 +428,8 @@ function ChangeSetting {
         $entries = @(
             @{ id = "preview"; description = "show preview window on" }
             @{ id = "nopreview"; description = "show preview window off" }
+            @{ id = "details"; description = "show directory details on" }
+            @{ id = "nodetails"; description = "show directory details off" }
             @{ id = "hidden"; description = "show hidden files on" }
             @{ id = "nohidden"; description = "show hidden files off" }
         )
@@ -457,11 +459,15 @@ function ChangeSetting {
     if ($LASTEXITCODE -ne 0) {
         return
     }
-    $output -match "^\[(?<entryId>.+)\]" | Out-Null
+    $output -match "^\[(?<entryId>\S+)\]" | Out-Null
     $entryId = $Matches["entryId"]
     switch ($entryId) {
         { $PSItem.EndsWith("preview") } {
             $settings.preview = -not $PSItem.StartsWith("no")
+            break
+        }
+        { $PSItem.EndsWith("details") } {
+            $settings.showDetails = -not $PSItem.StartsWith("no")
             break
         }
         { $PSItem.EndsWith("hidden") } {
