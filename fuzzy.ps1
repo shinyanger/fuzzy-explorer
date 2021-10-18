@@ -175,6 +175,7 @@ function ListCommands {
                 @{ id = ("ln", "link"); description = "mark '{0}' for link" }
                 @{ id = ("rm", "remove", "del"); description = "remove '{0}'"; shortcut = "del" }
                 @{ id = "ren"; description = "rename '{0}'"; shortcut = "f2" }
+                @{ id = "duplicate"; description = "duplicate '{0}'" }
             )
             if ($env:EDITOR) {
                 $fileCommands += @{ id = "edit"; description = "open '{0}' with editor"; shortcut = "ctrl-e" }
@@ -364,14 +365,24 @@ function ProcessCommand {
             Rename-Item -Path $selectedFile
             break
         }
+        "duplicate" {
+            $baseName = $selectedFile.BaseName
+            $destinationName = "{0} copy{1}" -f $baseName, $selectedFile.Extension
+            $index = 1
+            while (Test-Path -Path (Join-Path -Path $PWD -ChildPath $destinationName)) {
+                $destinationName =  "{0} copy {1}{2}" -f $baseName, ++$index, $selectedFile.Extension
+            }
+            Copy-Item -Path $selectedFile -Destination $destinationName
+            break
+        }
         "paste" {
             switch ($register.clipMode) {
                 ([ClipboardMode]::Copy) {
-                    Copy-Item -Path $register.clipboard -Destination . -Recurse
+                    Copy-Item -Path $register.clipboard -Recurse
                     break
                 }
                 ([ClipboardMode]::Cut) {
-                    Move-Item -Path $register.clipboard -Destination .
+                    Move-Item -Path $register.clipboard
                     $register.clipboard = $null
                     $register.clipMode = [ClipboardMode]::None
                     break
