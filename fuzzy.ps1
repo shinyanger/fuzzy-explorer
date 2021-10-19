@@ -16,8 +16,8 @@ enum ClipboardMode {
 
 function ListDirectory {
     $result = [PSCustomObject]@{
-        operation    = [string]::Empty
-        selectedFile = $null
+        operation     = [string]::Empty
+        selectedFiles = @()
     }
     $entries = & {
         $entries = @()
@@ -70,6 +70,7 @@ function ListDirectory {
     $fzfParams = @(
         "--height=80%",
         "--prompt=${location}> ",
+        "--multi",
         "--ansi",
         "--expect=${expect}"
     )
@@ -93,10 +94,12 @@ function ListDirectory {
         if (-not $output[0]) {
             $output[0] = "enter"
         }
-        $entry = $entries.Where( { $PSItem.details -eq $output[1] } )
         $result.operation = $output[0]
-        if (($entry.name -ne "..") -or (("enter", "right") -contains $output[0])) {
-            $result.selectedFile = Get-Item $entry.name -Force
+        $result.selectedFiles = for ($i = 1; $i -lt $output.Count; $i++) {
+            $entry = $entries.Where( { $PSItem.details -eq $output[$i] } )
+            if (($entry.name -ne "..") -or (("enter", "right") -contains $output[0])) {
+                Get-Item $entry.name -Force
+            }
         }
     }
     else {
@@ -108,7 +111,7 @@ function ListDirectory {
 function ProcessOperation {
     param (
         [string]$operation,
-        [System.IO.FileSystemInfo]$selectedFile
+        [System.IO.FileSystemInfo[]]$selectedFiles
     )
     $result = [PSCustomObject]@{
         commandMode = $false
@@ -116,12 +119,15 @@ function ProcessOperation {
     }
     switch ($operation) {
         "enter" {
-            if (-not $selectedFile.PSIsContainer) {
-                if ($IsWindows) {
-                    Invoke-Item $selectedFile.Name
-                }
-                elseif ($IsMacOS) {
-                    open $selectedFile.Name
+            if ($selectedFiles.Count -eq 1) {
+                $selectedFile = $selectedFiles[0]
+                if (-not $selectedFile.PSIsContainer) {
+                    if ($IsWindows) {
+                        Invoke-Item $selectedFile.Name
+                    }
+                    elseif ($IsMacOS) {
+                        open $selectedFile.Name
+                    }
                 }
             }
         }
@@ -130,10 +136,13 @@ function ProcessOperation {
             break
         }
         { ("enter", "right") -contains $PSItem } {
-            if ($selectedFile.PSIsContainer) {
-                Get-ChildItem -Path $selectedFile | Out-Null
-                if ($?) {
-                    Set-Location $selectedFile
+            if ($selectedFiles.Count -eq 1) {
+                $selectedFile = $selectedFiles[0]
+                if ($selectedFile.PSIsContainer) {
+                    Get-ChildItem -Path $selectedFile | Out-Null
+                    if ($?) {
+                        Set-Location $selectedFile
+                    }
                 }
             }
             break
@@ -159,7 +168,7 @@ function ProcessOperation {
 function ListCommands {
     param (
         [string]$shortcut,
-        [System.IO.FileSystemInfo]$selectedFile
+        [System.IO.FileSystemInfo[]]$selectedFiles
     )
     $commands = @(
         @{ id = "help"; description = "print help"; shortcut = "f1" }
@@ -178,15 +187,15 @@ function ListCommands {
         $commands += @{ id = "mark"; description = "add current path in bookmark" }
     }
     $commands += $extensions.commands.Where( { $PSItem.type -eq "common" } )
-    if ($selectedFile) {
+    if ($selectedFiles) {
         $fileCommands = & {
             $fileCommands = @(
-                @{ id = ("cp", "copy"); description = "mark '{0}' for copy" }
-                @{ id = ("mv", "move", "cut"); description = "mark '{0}' for move" }
-                @{ id = ("ln", "link"); description = "mark '{0}' for link" }
-                @{ id = ("rm", "remove", "del"); description = "remove '{0}'"; shortcut = "del" }
+                @{ id = ("cp", "copy"); description = "mark '{0}' for copy"; multiSupport = $true }
+                @{ id = ("mv", "move", "cut"); description = "mark '{0}' for move"; multiSupport = $true }
+                @{ id = ("ln", "link"); description = "mark '{0}' for link"; multiSupport = $true }
+                @{ id = ("rm", "remove", "del"); description = "remove '{0}'"; shortcut = "del"; multiSupport = $true }
                 @{ id = "ren"; description = "rename '{0}'"; shortcut = "f2" }
-                @{ id = "duplicate"; description = "duplicate '{0}'" }
+                @{ id = "duplicate"; description = "duplicate '{0}'"; multiSupport = $true }
             )
             if ($env:EDITOR) {
                 $fileCommands += @{ id = "edit"; description = "open '{0}' with editor"; shortcut = "ctrl-e" }
@@ -197,12 +206,21 @@ function ListCommands {
             $fileCommands
         }
         $commands += foreach ($command in $fileCommands) {
-            $command.description = $command.description -f $selectedFile.Name
-            $command
+            if (($selectedFiles.Count -eq 1) -or $command.multiSupport) {
+                $names = $selectedFiles.Name -join ";"
+                $command.description = $command.description -f $names
+                $command
+            }
         }
     }
     if ($register.clipboard) {
-        $commands += @{ id = "paste"; description = "paste '$($register.clipboard.FullName)' in current directory" }
+        if ($register.clipboard.Count -gt 1) {
+            $name = "<$($register.clipboard.Count) files>"
+        }
+        else {
+            $name = $register.clipboard[0].FullName
+        }
+        $commands += @{ id = "paste"; description = "paste '${name}' in current directory" }
     }
     $commandId = [string]::Empty
     if ($shortcut) {
@@ -234,7 +252,7 @@ function ListCommands {
 function ProcessCommand {
     param (
         [string]$commandId,
-        [System.IO.FileSystemInfo]$selectedFile
+        [System.IO.FileSystemInfo[]]$selectedFiles
     )
     switch ($commandId) {
         "help" {
@@ -350,40 +368,42 @@ function ProcessCommand {
             break
         }
         "edit" {
-            & $env:EDITOR $selectedFile.Name
+            & $env:EDITOR $selectedFiles[0].Name
             break
         }
         { ("cp", "copy") -contains $PSItem } {
-            $register.clipboard = $selectedFile
+            $register.clipboard = $selectedFiles
             $register.clipMode = [ClipboardMode]::Copy
             break
         }
         { ("mv", "move", "cut") -contains $PSItem } {
-            $register.clipboard = $selectedFile
+            $register.clipboard = $selectedFiles
             $register.clipMode = [ClipboardMode]::Cut
             break
         }
         { ("ln", "link") -contains $PSItem } {
-            $register.clipboard = $selectedFile
+            $register.clipboard = $selectedFiles
             $register.clipMode = [ClipboardMode]::Link
             break
         }
         { ("rm", "remove", "del") -contains $PSItem } {
-            Remove-Item -Path $selectedFile -Recurse -Force -Confirm
+            Remove-Item -Path $selectedFiles -Recurse -Force -Confirm
             break
         }
         "ren" {
-            Rename-Item -Path $selectedFile
+            Rename-Item -Path $selectedFiles[0]
             break
         }
         "duplicate" {
-            $baseName = $selectedFile.BaseName
-            $destinationName = "{0} copy{1}" -f $baseName, $selectedFile.Extension
-            $index = 1
-            while (Test-Path -Path (Join-Path -Path $PWD -ChildPath $destinationName)) {
-                $destinationName =  "{0} copy {1}{2}" -f $baseName, ++$index, $selectedFile.Extension
+            foreach ($selectedFile in $selectedFiles) {
+                $baseName = $selectedFile.BaseName
+                $destinationName = "{0} copy{1}" -f $baseName, $selectedFile.Extension
+                $index = 1
+                while (Test-Path -Path (Join-Path -Path $PWD -ChildPath $destinationName)) {
+                    $destinationName =  "{0} copy {1}{2}" -f $baseName, ++$index, $selectedFile.Extension
+                }
+                Copy-Item -Path $selectedFile -Destination $destinationName
             }
-            Copy-Item -Path $selectedFile -Destination $destinationName
             break
         }
         "paste" {
@@ -399,8 +419,9 @@ function ProcessCommand {
                     break
                 }
                 ([ClipboardMode]::Link) {
-                    $name = $register.clipboard.Name
-                    New-Item -ItemType SymbolicLink -Path $name -Target $register.clipboard.FullName
+                    foreach ($file in $register.clipboard) {
+                        New-Item -ItemType SymbolicLink -Path $file.Name -Target $file.FullName
+                    }
                     $register.clipboard = $null
                     $register.clipMode = [ClipboardMode]::None
                     break
@@ -413,11 +434,16 @@ function ProcessCommand {
         Default {
             $externalCommand = $extensions.commands.Where( { [string[]]($PSItem.id) -contains $commandId } )
             if ($externalCommand) {
-                $expression = $externalCommand.expression
                 if ($externalCommand.type -eq "file") {
-                    $expression = $expression -f $selectedFile.Name
+                    foreach ($selectedFile in $selectedFiles) {
+                        $expression = $externalCommand.expression -f $selectedFile.Name
+                        Invoke-Expression $expression
+                    }
                 }
-                Invoke-Expression $expression
+                else {
+                    $expression = $externalCommand.expression
+                    Invoke-Expression $expression
+                }
             }
         }
     }
@@ -490,7 +516,7 @@ function ChangeSetting {
 
 function Initialize {
     $script:register = [PSCustomObject]@{
-        clipboard = $null
+        clipboard = @()
         clipMode  = [ClipboardMode]::None
         bookmark  = [System.Collections.Generic.List[string]]@()
     }
@@ -514,16 +540,16 @@ function FuzzyExplorer {
     while ($continue) {
         $result = ListDirectory
         $operation = $result.operation
-        $selectedFile = $result.selectedFile
-        $result = ProcessOperation $operation $selectedFile
+        $selectedFiles = $result.selectedFiles
+        $result = ProcessOperation $operation $selectedFiles
         $commandMode = $result.commandMode
         $shortcut = $result.shortcut
         if (-not $commandMode) {
             continue
         }
-        $commandId = ListCommands $shortcut $selectedFile
+        $commandId = ListCommands $shortcut $selectedFiles
         if ($commandId) {
-            ProcessCommand $commandId $selectedFile
+            ProcessCommand $commandId $selectedFiles
         }
     }
     Finalize
