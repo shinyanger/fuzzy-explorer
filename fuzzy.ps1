@@ -66,7 +66,7 @@ function ListDirectory {
             $expect += ",${externalShortcuts}"
         }
     }
-    $fzfParams = @(
+    $fzfParams = [System.Collections.Generic.List[string]]@(
         "--height=80%",
         "--prompt=${location}> ",
         "--multi",
@@ -74,18 +74,20 @@ function ListDirectory {
         "--expect=${expect}"
     )
     if ($settings.showDetails) {
-        $fzfParams += @(
-            "--header-lines=2",
-            "--nth=3..",
-            "--delimiter=\s{2,}\d*\s"
+        $fzfParams.AddRange(
+            [System.Collections.Generic.List[string]]@(
+                "--header-lines=2",
+                "--nth=3..",
+                "--delimiter=\s{2,}\d*\s"
+            )
         )
         if ($settings.preview) {
-            $fzfParams += "--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {3..}"
+            $fzfParams.Add("--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {3..}")
         }
     }
     else {
         if ($settings.preview) {
-            $fzfParams += "--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {}"
+            $fzfParams.Add("--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {}")
         }
     }
     $output = $entries.display | fzf $fzfDefaultParams $fzfParams
@@ -286,13 +288,13 @@ function ProcessCommand {
             break
         }
         { ("fd", "find") -contains $PSItem } {
-            $fzfParams = @("--height=80%", "--prompt=:${PSItem} ")
+            $fzfParams = [System.Collections.Generic.List[string]]@("--height=80%", "--prompt=:${PSItem} ")
             if ($settings.preview) {
-                $fzfParams += "--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {}"
+                $fzfParams.Add("--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {}")
             }
             if (IsProgramInstalled "fd") {
                 $fdParams = @("--color=always")
-                $fzfParams += "--ansi"
+                $fzfParams.Add("--ansi")
                 $output = fd $fdParams | fzf $fzfDefaultParams $fzfParams
             }
             else {
@@ -309,7 +311,7 @@ function ProcessCommand {
             break
         }
         { ("rg", "grep", "search") -contains $PSItem } {
-            $fzfParams = @(
+            $fzfParams = [System.Collections.Generic.List[string]]@(
                 "--height=80%",
                 "--prompt=:${PSItem} ",
                 "--delimiter=:",
@@ -317,21 +319,23 @@ function ProcessCommand {
                 "--phony"
             )
             if ($settings.preview) {
-                $fzfParams += @(
-                    "--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {1} {2}",
-                    "--preview-window=+{2}-/2"
+                $fzfParams.AddRange(
+                    [System.Collections.Generic.List[string]]@(
+                        "--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {1} {2}",
+                        "--preview-window=+{2}-/2"
+                    )
                 )
             }
             if (IsProgramInstalled "rg") {
                 $rgParams = @("--line-number", "--no-heading", "--color=always", "--smart-case")
                 $initParams = $rgParams + '""'
                 $reloadParams = $rgParams + "{q}"
-                $fzfParams += "--bind=change:reload:rg ${reloadParams}"
+                $fzfParams.Add("--bind=change:reload:rg ${reloadParams}")
                 $initList = rg $initParams
                 $output = $initList | fzf $fzfDefaultParams $fzfParams
             }
             else {
-                $fzfParams += "--bind=change:reload:pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} search {q}"
+                $fzfParams.Add("--bind=change:reload:pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} search {q}")
                 $initList = & $helperFile $tempSettingsFile search
                 $output = $initList | fzf $fzfDefaultParams $fzfParams
             }
@@ -348,9 +352,9 @@ function ProcessCommand {
             break
         }
         "jump" {
-            $fzfParams = @("--height=40%", "--prompt=:${PSItem} ")
+            $fzfParams = [System.Collections.Generic.List[string]]@("--height=40%", "--prompt=:${PSItem} ")
             if ($settings.preview) {
-                $fzfParams += "--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {}"
+                $fzfParams.Add("--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {}")
             }
             $location = $register.bookmark | fzf $fzfDefaultParams $fzfParams
             if ($LASTEXITCODE -eq 0) {
