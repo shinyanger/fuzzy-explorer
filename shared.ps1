@@ -15,7 +15,7 @@ function IsProgramInstalled {
     param (
         [string]$program
     )
-    Get-Command -Name $program -ErrorAction SilentlyContinue | Out-Null
+    $null = Get-Command -Name $program -ErrorAction SilentlyContinue
     return $?
 }
 

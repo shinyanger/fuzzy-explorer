@@ -135,7 +135,7 @@ function ProcessOperation {
             if ($selectedFiles.Count -eq 1) {
                 $selectedFile = $selectedFiles[0]
                 if ($selectedFile.PSIsContainer) {
-                    Get-ChildItem -Path $selectedFile | Out-Null
+                    $null = Get-ChildItem -Path $selectedFile
                     if ($?) {
                         Set-Location $selectedFile
                     }
@@ -238,7 +238,7 @@ function ListCommands {
     $fzfParams = @("--height=40%", "--nth=1", "--prompt=:", "--exact", "--ansi")
     $output = $displays | fzf $fzfDefaultParams $fzfParams
     if ($LASTEXITCODE -eq 0) {
-        $output -match "^\[(?<commandId>\w+)\]" | Out-Null
+        $null = $output -match "^\[(?<commandId>\w+)\]"
         $commandId = $Matches["commandId"]
     }
     return $commandId
@@ -263,7 +263,7 @@ function ProcessCommand {
             $helpStr = $outStr.TrimEnd()
             Write-Host "usage:"
             Write-Host $helpStr
-            [System.Console]::ReadKey($true) | Out-Null
+            $null = [System.Console]::ReadKey($true)
             break
         }
         { ("quit", "exit") -contains $PSItem } {
@@ -360,7 +360,7 @@ function ProcessCommand {
             break
         }
         "unmark" {
-            $register.bookmark.Remove($PWD.ToString()) | Out-Null
+            $null = $register.bookmark.Remove($PWD.ToString())
             break
         }
         "edit" {
@@ -480,7 +480,7 @@ function ChangeSetting {
     if ($LASTEXITCODE -ne 0) {
         return
     }
-    $output -match "^\[(?<entryId>\S+)\]" | Out-Null
+    $null = $output -match "^\[(?<entryId>\S+)\]"
     $entryId = $Matches["entryId"]
     switch ($entryId) {
         { $PSItem.EndsWith("preview") } {
@@ -496,7 +496,7 @@ function ChangeSetting {
             break
         }
         { $PSItem.StartsWith("sort") } {
-            $PSItem -match "sort=(?<sortBy>\w+)" | Out-Null
+            $null = $PSItem -match "sort=(?<sortBy>\w+)"
             $settings.sortBy = $Matches["sortBy"]
             break
         }
