@@ -20,11 +20,11 @@ function ListDirectory {
         selectedFiles = @()
     }
     . {
-        $entries = [System.Collections.Generic.List[hashtable]]@()
+        $entries = [System.Collections.Generic.List[PSCustomObject]]@()
         if ($settings.showDetails) {
             $rows = GetDirHeader
             foreach ($row in $rows) {
-                $entries.Add( @{ name = [string]::Empty; details = $row; display = $row } )
+                $entries.Add( [PSCustomObject]@{ name = [string]::Empty; details = $row; display = $row } )
             }
         }
         . {
@@ -37,7 +37,7 @@ function ListDirectory {
                 $row = $fields[3].Substring(0, $index) + ".."
             }
             $display = ColorizeRows $item $row
-            $entries.Add( @{ name = ".."; details = $row; display = $display } )
+            $entries.Add( [PSCustomObject]@{ name = ".."; details = $row; display = $display } )
         }
         . {
             $attributes = GetDirAttributes
@@ -47,7 +47,7 @@ function ListDirectory {
         $rows = [string[]](GetDirRows $items)
         $displays = [string[]](ColorizeRows $items $rows)
         for ($i = 0; $i -lt $items.Count; $i++) {
-            $entries.Add( @{ name = $items[$i].Name; details = $rows[$i]; display = $displays[$i] } )
+            $entries.Add( [PSCustomObject]@{ name = $items[$i].Name; details = $rows[$i]; display = $displays[$i] } )
         }
     }
     . {
