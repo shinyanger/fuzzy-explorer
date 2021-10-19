@@ -19,12 +19,12 @@ function ListDirectory {
         operation     = [string]::Empty
         selectedFiles = @()
     }
-    $entries = & {
+    . {
         $entries = @()
         if ($settings.showDetails) {
             $entries = GetDirHeader | ForEach-Object { @{ name = [string]::Empty; details = $PSItem; display = $PSItem } }
         }
-        $entries += & {
+        $entries += . {
             $item = Get-Item . -Force
             $row = ".."
             if ($settings.showDetails) {
@@ -36,28 +36,25 @@ function ListDirectory {
             $display = ColorizeRows $item $row
             @{ name = ".."; details = $row; display = $display }
         }
-        $items = & {
+        . {
             $attributes = GetDirAttributes
             $items = Get-ChildItem -Force -Attributes $attributes
             $items = SortDir $items
-            $items
         }
         $rows = [string[]](GetDirRows $items)
         $displays = [string[]](ColorizeRows $items $rows)
         $entries += for ($i = 0; $i -lt $items.Count; $i++) {
             @{ name = $items[$i].Name; details = $rows[$i]; display = $displays[$i] }
         }
-        $entries
     }
-    $location = & {
+    . {
         $location = $PWD.ToString()
         $location = $location.Replace($HOME, "~")
         if ($location.Length -gt 80) {
             $location = "..." + ($location[-80..-1] -join "")
         }
-        $location
     }
-    $expect = & {
+    . {
         $expect = "left,right,:,f5"
         $internalShortcuts = "ctrl-q,ctrl-e,ctrl-p,ctrl-j,del,f1,f2"
         $expect += ",${internalShortcuts}"
@@ -65,7 +62,6 @@ function ListDirectory {
         if ($externalShortcuts) {
             $expect += ",${externalShortcuts}"
         }
-        $expect
     }
     $fzfParams = @(
         "--height=80%",
@@ -188,7 +184,7 @@ function ListCommands {
     }
     $commands += $extensions.commands.Where( { $PSItem.type -eq "common" } )
     if ($selectedFiles) {
-        $fileCommands = & {
+        . {
             $fileCommands = @(
                 @{ id = ("cp", "copy"); description = "mark '{0}' for copy"; multiSupport = $true }
                 @{ id = ("mv", "move", "cut"); description = "mark '{0}' for move"; multiSupport = $true }
@@ -203,7 +199,6 @@ function ListCommands {
             $fileCommands += foreach ($command in $extensions.commands.Where( { $PSItem.type -eq "file" } )) {
                 $command.PSObject.Copy()
             }
-            $fileCommands
         }
         $commands += foreach ($command in $fileCommands) {
             if (($selectedFiles.Count -eq 1) -or $command.multiSupport) {
@@ -451,7 +446,7 @@ function ProcessCommand {
 }
 
 function ChangeSetting {
-    $entries = & {
+    . {
         $entries = @(
             @{ id = "preview"; description = "show preview window on" }
             @{ id = "nopreview"; description = "show preview window off" }
@@ -476,7 +471,6 @@ function ChangeSetting {
         if ($env:EDITOR) {
             $entries += @{ id = "all"; description = "edit settings file" }
         }
-        $entries
     }
     $displays = foreach ($entry in $entries) {
         "{0,-15} : {1}" -f "[$($entry.id)]", $entry.description
