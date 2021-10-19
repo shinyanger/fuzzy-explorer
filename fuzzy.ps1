@@ -261,6 +261,7 @@ function ProcessCommand {
                 "left"  = "go to parent directory"
                 "right" = "enter directory"
                 "f5"    = "refresh directory"
+                "tab"   = "mark for multiple selection"
                 ":"     = "select command"
             }
             $outStr = $help | Format-List | Out-String

@@ -37,6 +37,7 @@ enter | enter directory / open file
 left  | go to parent directory
 right | enter directory
 f5    | refresh directory
+tab   | mark for multiple selection
 :     | select command
 
 ## Advanced
