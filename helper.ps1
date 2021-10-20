@@ -8,7 +8,7 @@ function Preview {
     )
     $selectedFile = Get-Item $fileName -Force -ErrorAction SilentlyContinue
     if (-not $?) {
-        $fileNames = $fileName -split " -> "
+        $fileNames = $fileName.Split(" -> ")
         $fileName = $fileNames[0]
         $selectedFile = Get-Item $fileName -Force
     }

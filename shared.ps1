@@ -41,7 +41,7 @@ function FormatColor {
 
 function GetDirHeader {
     $outStr = Get-Item ~ | Out-String
-    $fields = $outStr -split [System.Environment]::NewLine
+    $fields = $outStr.Split([System.Environment]::NewLine)
     $fields[3..4]
 }
 
@@ -60,7 +60,7 @@ function GetDirRows {
     if ($items) {
         if ($settings.showDetails) {
             $outStr = $items | Format-Table -HideTableHeaders | Out-String
-            $fields = $outStr.TrimEnd() -split [System.Environment]::NewLine
+            $fields = $outStr.TrimEnd().Split([System.Environment]::NewLine)
             $count = $fields.Count
             $fields[3..($count - 1)]
         }

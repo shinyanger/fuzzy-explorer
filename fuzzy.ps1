@@ -32,7 +32,7 @@ function ListDirectory {
             $row = ".."
             if ($settings.showDetails) {
                 $outstr = $item | Format-Table -HideTableHeaders | Out-String
-                $fields = $outstr -split [System.Environment]::NewLine
+                $fields = $outstr.Split([System.Environment]::NewLine)
                 $index = $fields[3].LastIndexOf($item.Name)
                 $row = $fields[3].Substring(0, $index) + ".."
             }
@@ -341,7 +341,7 @@ function ProcessCommand {
                 $output = $initList | fzf $fzfDefaultParams $fzfParams
             }
             if ($LASTEXITCODE -eq 0) {
-                $fields = $output -split ":"
+                $fields = $output.Split(":")
                 $fileName = $fields[0]
                 if ($env:EDITOR) {
                     & $env:EDITOR $fileName
