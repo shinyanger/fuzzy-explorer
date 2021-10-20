@@ -20,7 +20,7 @@ function ListDirectory {
         selectedFiles = @()
     }
     . {
-        $entries = [System.Collections.Generic.List[PSCustomObject]]@()
+        $entries = [System.Collections.Generic.List[PSCustomObject]]::new()
         if ($settings.showDetails) {
             $rows = GetDirHeader
             foreach ($row in $rows) {
@@ -520,7 +520,7 @@ function Initialize {
     $script:register = [PSCustomObject]@{
         clipboard = @()
         clipMode  = [ClipboardMode]::None
-        bookmark  = [System.Collections.Generic.List[string]]@()
+        bookmark  = [System.Collections.Generic.List[string]]::new()
     }
     if (Test-Path -Path $bookmarkFile) {
         $register.bookmark = [System.Collections.Generic.List[string]]([System.IO.File]::ReadAllLines($bookmarkFile) | ConvertFrom-Json)

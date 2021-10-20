@@ -57,7 +57,7 @@ function Preview {
         }
         else {
             $count = 0
-            $content = [System.Collections.Generic.List[string]]@()
+            $content = [System.Collections.Generic.List[string]]::new()
             foreach ($text in [System.IO.File]::ReadLines($fileName)) {
                 $content.Add($text)
                 if (++$count -ge 100) {
