@@ -454,29 +454,29 @@ function ProcessCommand {
 
 function ChangeSetting {
     . {
-        $entries = @(
-            @{ id = "preview"; description = "show preview window on" }
-            @{ id = "nopreview"; description = "show preview window off" }
-            @{ id = "details"; description = "show directory details on" }
-            @{ id = "nodetails"; description = "show directory details off" }
-            @{ id = "hidden"; description = "show hidden files on" }
-            @{ id = "nohidden"; description = "show hidden files off" }
+        $entries = [System.Collections.Generic.List[PSCustomObject]]@(
+            [PSCustomObject]@{ id = "preview"; description = "show preview window on" }
+            [PSCustomObject]@{ id = "nopreview"; description = "show preview window off" }
+            [PSCustomObject]@{ id = "details"; description = "show directory details on" }
+            [PSCustomObject]@{ id = "nodetails"; description = "show directory details off" }
+            [PSCustomObject]@{ id = "hidden"; description = "show hidden files on" }
+            [PSCustomObject]@{ id = "nohidden"; description = "show hidden files off" }
         )
-        $sortEntries = @(
-            @{ id = "default"; description = "sort by default" }
-            @{ id = "nameasc"; description = "sort by name ascending" }
-            @{ id = "namedesc"; description = "sort by name descending" }
-            @{ id = "sizeasc"; description = "sort by size ascending" }
-            @{ id = "sizedesc"; description = "sort by size descending" }
-            @{ id = "timeasc"; description = "sort by time ascending" }
-            @{ id = "timedesc"; description = "sort by time descending" }
+        $sortEntries = [System.Collections.Generic.List[PSCustomObject]]@(
+            [PSCustomObject]@{ id = "default"; description = "sort by default" }
+            [PSCustomObject]@{ id = "nameasc"; description = "sort by name ascending" }
+            [PSCustomObject]@{ id = "namedesc"; description = "sort by name descending" }
+            [PSCustomObject]@{ id = "sizeasc"; description = "sort by size ascending" }
+            [PSCustomObject]@{ id = "sizedesc"; description = "sort by size descending" }
+            [PSCustomObject]@{ id = "timeasc"; description = "sort by time ascending" }
+            [PSCustomObject]@{ id = "timedesc"; description = "sort by time descending" }
         )
-        $entries += foreach ($entry in $sortEntries) {
+        foreach ($entry in $sortEntries) {
             $entry.id = "sort=$($entry.id)"
-            $entry
+            $entries.Add($entry)
         }
         if ($env:EDITOR) {
-            $entries += @{ id = "all"; description = "edit settings file" }
+            $entries.Add( @{ id = "all"; description = "edit settings file" } )
         }
     }
     $displays = foreach ($entry in $entries) {
