@@ -171,45 +171,45 @@ function ListCommands {
         [string]$shortcut,
         [System.IO.FileSystemInfo[]]$selectedFiles
     )
-    $commands = @(
-        @{ id = "help"; description = "print help"; shortcut = "f1" }
-        @{ id = ("quit", "exit"); description = "quit explorer"; shortcut = "ctrl-q" }
-        @{ id = "set"; description = "change setting" }
-        @{ id = ("new", "touch"); description = "create new file" }
-        @{ id = "mkdir"; description = "create new directory" }
-        @{ id = ("fd", "find"); description = "find file/directory"; shortcut = "ctrl-p" }
-        @{ id = ("rg", "grep", "search"); description = "search files contents" }
-        @{ id = "jump"; description = "go to path in bookmark"; shortcut = "ctrl-j" }
+    $commands = [System.Collections.Generic.List[PSCustomObject]]@(
+        [PSCustomObject]@{ id = "help"; description = "print help"; shortcut = "f1" }
+        [PSCustomObject]@{ id = ("quit", "exit"); description = "quit explorer"; shortcut = "ctrl-q" }
+        [PSCustomObject]@{ id = "set"; description = "change setting" }
+        [PSCustomObject]@{ id = ("new", "touch"); description = "create new file" }
+        [PSCustomObject]@{ id = "mkdir"; description = "create new directory" }
+        [PSCustomObject]@{ id = ("fd", "find"); description = "find file/directory"; shortcut = "ctrl-p" }
+        [PSCustomObject]@{ id = ("rg", "grep", "search"); description = "search files contents" }
+        [PSCustomObject]@{ id = "jump"; description = "go to path in bookmark"; shortcut = "ctrl-j" }
     )
     if ($register.bookmark.Contains($PWD.ToString())) {
-        $commands += @{ id = "unmark"; description = "remove current path in bookmark" }
+        $commands.Add( [PSCustomObject]@{ id = "unmark"; description = "remove current path in bookmark" } )
     }
     else {
-        $commands += @{ id = "mark"; description = "add current path in bookmark" }
+        $commands.Add( [PSCustomObject]@{ id = "mark"; description = "add current path in bookmark" } )
     }
-    $commands += $extensions.commands.Where( { $PSItem.type -eq "common" } )
+    $commands.AddRange( $extensions.commands.Where( { $PSItem.type -eq "common" } ) )
     if ($selectedFiles) {
         . {
-            $fileCommands = @(
-                @{ id = ("cp", "copy"); description = "mark '{0}' for copy"; multiSupport = $true }
-                @{ id = ("mv", "move", "cut"); description = "mark '{0}' for move"; multiSupport = $true }
-                @{ id = ("ln", "link"); description = "mark '{0}' for link"; multiSupport = $true }
-                @{ id = ("rm", "remove", "del"); description = "remove '{0}'"; shortcut = "del"; multiSupport = $true }
-                @{ id = "ren"; description = "rename '{0}'"; shortcut = "f2" }
-                @{ id = "duplicate"; description = "duplicate '{0}'"; multiSupport = $true }
+            $fileCommands = [System.Collections.Generic.List[PSCustomObject]]@(
+                [PSCustomObject]@{ id = ("cp", "copy"); description = "mark '{0}' for copy"; multiSupport = $true }
+                [PSCustomObject]@{ id = ("mv", "move", "cut"); description = "mark '{0}' for move"; multiSupport = $true }
+                [PSCustomObject]@{ id = ("ln", "link"); description = "mark '{0}' for link"; multiSupport = $true }
+                [PSCustomObject]@{ id = ("rm", "remove", "del"); description = "remove '{0}'"; shortcut = "del"; multiSupport = $true }
+                [PSCustomObject]@{ id = "ren"; description = "rename '{0}'"; shortcut = "f2" }
+                [PSCustomObject]@{ id = "duplicate"; description = "duplicate '{0}'"; multiSupport = $true }
             )
             if ($env:EDITOR) {
-                $fileCommands += @{ id = "edit"; description = "open '{0}' with editor"; shortcut = "ctrl-e" }
+                $fileCommands.Add( @{ id = "edit"; description = "open '{0}' with editor"; shortcut = "ctrl-e" } )
             }
-            $fileCommands += foreach ($command in $extensions.commands.Where( { $PSItem.type -eq "file" } )) {
-                $command.PSObject.Copy()
+            foreach ($command in $extensions.commands.Where( { $PSItem.type -eq "file" } )) {
+                $fileCommands.Add($command.PSObject.Copy())
             }
         }
-        $commands += foreach ($command in $fileCommands) {
+        foreach ($command in $fileCommands) {
             if (($selectedFiles.Count -eq 1) -or $command.multiSupport) {
                 $names = $selectedFiles.Name -join ";"
                 $command.description = $command.description -f $names
-                $command
+                $commands.Add($command)
             }
         }
     }
@@ -220,7 +220,7 @@ function ListCommands {
         else {
             $name = $register.clipboard[0].FullName
         }
-        $commands += @{ id = "paste"; description = "paste '${name}' in current directory" }
+        $commands.Add( @{ id = "paste"; description = "paste '${name}' in current directory" } )
     }
     $commandId = [string]::Empty
     if ($shortcut) {
