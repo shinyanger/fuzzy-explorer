@@ -40,6 +40,13 @@
             "expression": "Invoke-Item ."
         },
         {
+            "id": ["echo", "print"],
+            "type": "file",
+            "description": "print '{0}' on console",
+            "multiSupport": true,
+            "expression": "Write-Output {0}"
+        },
+        {
             "id": "vi",
             "type": "file",
             "description": "open '{0}' with vi",
