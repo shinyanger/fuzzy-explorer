@@ -266,8 +266,8 @@ function ProcessCommand {
             }
             $outStr = $help | Format-List | Out-String
             $helpStr = $outStr.TrimEnd()
-            Write-Host "usage:"
-            Write-Host $helpStr
+            "usage:"
+            $helpStr
             $null = [System.Console]::ReadKey($true)
             break
         }
