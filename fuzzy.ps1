@@ -19,15 +19,15 @@ function ListDirectory {
         operation     = [string]::Empty
         selectedFiles = @()
     }
-    . {
-        $entries = [System.Collections.Generic.List[PSCustomObject]]::new()
+    $entries = [System.Collections.Generic.List[PSCustomObject]]::new()
+    & {
         if ($settings.showDetails) {
             $rows = GetDirHeader
             foreach ($row in $rows) {
                 $entries.Add( [PSCustomObject]@{ name = [string]::Empty; details = $row; display = $row } )
             }
         }
-        . {
+        & {
             $item = Get-Item . -Force
             $row = ".."
             if ($settings.showDetails) {
@@ -39,10 +39,10 @@ function ListDirectory {
             $display = ColorizeRows $item $row
             $entries.Add( [PSCustomObject]@{ name = ".."; details = $row; display = $display } )
         }
-        . {
+        $items = & {
             $attributes = GetDirAttributes
             $items = Get-ChildItem -Force -Attributes $attributes
-            $items = SortDir $items
+            SortDir $items
         }
         $rows = [string[]](GetDirRows $items)
         $displays = [string[]](ColorizeRows $items $rows)
@@ -50,15 +50,16 @@ function ListDirectory {
             $entries.Add( [PSCustomObject]@{ name = $items[$i].Name; details = $rows[$i]; display = $displays[$i] } )
         }
     }
-    . {
+    $location = & {
         $location = $PWD.ToString()
         $location = $location.Replace($HOME, "~")
         if ($location.Length -gt 80) {
             $index = $location.Length - 80
             $location = "..." + $location.Substring($index)
         }
+        $location
     }
-    . {
+    $expect = & {
         $expect = "left,right,:,f5"
         $internalShortcuts = "ctrl-q,ctrl-e,ctrl-p,ctrl-j,del,f1,f2"
         $expect += ",${internalShortcuts}"
@@ -66,6 +67,7 @@ function ListDirectory {
         if ($externalShortcuts) {
             $expect += ",${externalShortcuts}"
         }
+        $expect
     }
     $fzfParams = [System.Collections.Generic.List[string]]@(
         "--height=80%",
@@ -190,7 +192,7 @@ function ListCommands {
     }
     $commands.AddRange( $extensions.commands.Where( { $PSItem.type -eq "common" } ) )
     if ($selectedFiles) {
-        . {
+        $fileCommands = & {
             $fileCommands = [System.Collections.Generic.List[PSCustomObject]]@(
                 [PSCustomObject]@{ id = ("cp", "copy"); description = "mark '{0}' for copy"; multiSupport = $true }
                 [PSCustomObject]@{ id = ("mv", "move", "cut"); description = "mark '{0}' for move"; multiSupport = $true }
@@ -205,6 +207,7 @@ function ListCommands {
             foreach ($command in $extensions.commands.Where( { $PSItem.type -eq "file" } )) {
                 $fileCommands.Add($command.PSObject.Copy())
             }
+            $fileCommands
         }
         foreach ($command in $fileCommands) {
             if (($selectedFiles.Count -eq 1) -or $command.multiSupport) {
@@ -454,7 +457,7 @@ function ProcessCommand {
 }
 
 function ChangeSetting {
-    . {
+    $entries = & {
         $entries = [System.Collections.Generic.List[PSCustomObject]]@(
             [PSCustomObject]@{ id = "preview"; description = "show preview window on" }
             [PSCustomObject]@{ id = "nopreview"; description = "show preview window off" }
@@ -479,6 +482,7 @@ function ChangeSetting {
         if ($env:EDITOR) {
             $entries.Add( @{ id = "all"; description = "edit settings file" } )
         }
+        $entries
     }
     $displays = foreach ($entry in $entries) {
         "{0,-15} : {1}" -f "[$($entry.id)]", $entry.description
