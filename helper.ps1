@@ -13,7 +13,7 @@ function Preview {
         $selectedFile = Get-Item $fileName -Force
     }
     if ($selectedFile.PSIsContainer) {
-        $script:settings = Get-Content $tempSettingsFile | ConvertFrom-Json
+        $script:settings = [System.IO.File]::ReadAllLines($tempSettingsFile) | ConvertFrom-Json
         $attributes = GetDirAttributes
         $items = Get-ChildItem $selectedFile -Force -Attributes $attributes
         if ($?) {
@@ -38,7 +38,7 @@ function Preview {
         $lineFormat = (FormatColor "{0,4}" -FgColor $colors.lineNumber) + " {1}"
         $formatter = { $lineFormat -f ($PSItem + 1), $content[$PSItem] }
         if ($line) {
-            $content = [string[]](Get-Content $fileName -ReadCount 0)
+            $content = [string[]][System.IO.File]::ReadAllLines($fileName)
             $count = $content.Length
             if ($line -gt 1) {
                 0..($line - 2) | ForEach-Object { & $formatter }
@@ -49,8 +49,14 @@ function Preview {
             }
         }
         else {
-            $content = [string[]](Get-Content $fileName -TotalCount 100 -ReadCount 0)
-            $count = $content.Length
+            $count = 0
+            $content = [System.Collections.Generic.List[string]]@()
+            foreach ($text in [System.IO.File]::ReadLines($fileName)) {
+                $content.Add($text)
+                if (++$count -ge 100) {
+                    break
+                }
+            }
             0..($count - 1) | ForEach-Object { & $formatter }
         }
     }

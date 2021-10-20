@@ -523,10 +523,10 @@ function Initialize {
         bookmark  = [System.Collections.Generic.List[string]]@()
     }
     if (Test-Path -Path $bookmarkFile) {
-        $register.bookmark = [System.Collections.Generic.List[string]](Get-Content $bookmarkFile | ConvertFrom-Json)
+        $register.bookmark = [System.Collections.Generic.List[string]]([System.IO.File]::ReadAllLines($bookmarkFile) | ConvertFrom-Json)
     }
-    $script:settings = Get-Content $settingsFile | ConvertFrom-Json
-    $script:extensions = Get-Content $extensionsFile | ConvertFrom-Json
+    $script:settings = [System.IO.File]::ReadAllLines($settingsFile) | ConvertFrom-Json
+    $script:extensions = [System.IO.File]::ReadAllLines($extensionsFile) | ConvertFrom-Json
     $script:tempSettingsFile = New-TemporaryFile
     Copy-Item -Path $settingsFile -Destination $tempSettingsFile -Force
     $script:continue = $true
