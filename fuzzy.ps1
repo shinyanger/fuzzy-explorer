@@ -663,7 +663,9 @@ function Initialize {
 
 function Finalize {
     & {
-        $content = [JsonSerializer]::Serialize($register.bookmark, [List[string]])
+        $options = [JsonSerializerOptions]::new()
+        $options.WriteIndented = $true
+        $content = [JsonSerializer]::Serialize($register.bookmark, [List[string]], $options)
         [System.IO.File]::WriteAllLines($bookmarkFile, $content)
     }
     Remove-Item -Path $tempSettingsFile -Force
