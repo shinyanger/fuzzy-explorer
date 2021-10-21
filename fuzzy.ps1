@@ -23,7 +23,7 @@ class Setting {
 
 class Command {
     [string]$id
-    [string[]]$aliases
+    [System.Collections.Generic.List[string]]$aliases
     [string]$description
     [string]$shortcut
     Command() {
@@ -32,7 +32,7 @@ class Command {
     }
     Command(
         [string]$id,
-        [string[]]$aliases,
+        [System.Collections.Generic.List[string]]$aliases,
         [string]$description,
         [string]$shortcut
     ) {
@@ -50,7 +50,7 @@ class FileCommand : Command {
     }
     FileCommand(
         [string]$id,
-        [string[]]$aliases,
+        [System.Collections.Generic.List[string]]$aliases,
         [string]$description,
         [string]$shortcut,
         [bool]$multiSupport
@@ -73,7 +73,7 @@ class ExternalCommand : FileCommand, System.ICloneable {
 }
 
 class Extensions {
-    [ExternalCommand[]]$commands
+    [System.Collections.Generic.List[ExternalCommand]]$commands
 }
 
 class DirEntry {
@@ -177,7 +177,7 @@ function ListDirectory {
         }
         $result.operation = $output[0]
         $result.selectedFiles = for ($i = 1; $i -lt $output.Count; $i++) {
-            $entry = $entries.Where( { $PSItem.details -eq $output[$i] } )
+            $entry = $entries.Find({ param($item) $item.details -eq $output[$i] })
             if (($entry.name -ne "..") -or (("enter", "right") -contains $output[0])) {
                 Get-Item $entry.name -Force
             }
@@ -311,7 +311,7 @@ function ListCommands {
     }
     $commandId = [string]::Empty
     if ($shortcut) {
-        $command = $commands.Where( { $PSItem.shortcut -eq $shortcut } )
+        $command = $commands.Find({ param($item) $item.shortcut -eq $shortcut })
         if ($command) {
             $commandId = $command.id
         }
@@ -523,7 +523,7 @@ function ProcessCommand {
             break
         }
         Default {
-            $externalCommand = $extensions.commands.Where({ ($PSItem.id -eq $commandId) -or ($PSItem.aliases -contains $commandId) })
+            $externalCommand = $extensions.commands.Find({ param($item) ($item.id -eq $commandId) -or ($item.aliases -contains $commandId) })
             if ($externalCommand) {
                 if ($externalCommand.type -eq "file") {
                     foreach ($selectedFile in $selectedFiles) {
