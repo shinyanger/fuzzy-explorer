@@ -1,3 +1,5 @@
+using namespace System.Collections.Generic
+
 $sharedFile = Join-Path -Path $PSScriptRoot -ChildPath "shared.ps1"
 . $sharedFile
 
@@ -29,7 +31,7 @@ function Preview {
         }
     }
     elseif (IsProgramInstalled "bat") {
-        $batParams = @("--style=numbers", "--color=always")
+        $batParams = ("--style=numbers", "--color=always")
         if ($line) {
             bat $batParams --highlight-line $line $fileName
         }
@@ -39,16 +41,16 @@ function Preview {
     }
     else {
         $lineFormat = (FormatColor "{0,4}" -FgColor $colors.lineNumber) + " {1}"
-        $formatter = { $lineFormat -f ($i + 1), $content[$i] }
+        $formatter = { [string]::Format($lineFormat, ($i + 1), $content[$i]) }
         if ($line) {
-            $content = [string[]][System.IO.File]::ReadAllLines($fileName)
-            $count = $content.Length
+            $content = [List[string]][System.IO.File]::ReadAllLines($fileName)
+            $count = $content.Count
             if ($line -gt 1) {
                 for ($i = 0; $i -lt $line - 1; $i++) {
                     & $formatter
                 }
             }
-            $lineFormat -f $line, (FormatColor $content[$line - 1] -BgColor $colors.highlight)
+            [string]::Format($lineFormat, $line, (FormatColor $content[$line - 1] -BgColor $colors.highlight))
             if ($line -lt $count) {
                 for ($i = $line; $i -lt $count; $i++) {
                     & $formatter
@@ -57,7 +59,7 @@ function Preview {
         }
         else {
             $count = 0
-            $content = [System.Collections.Generic.List[string]]::new()
+            $content = [List[string]]::new()
             foreach ($text in [System.IO.File]::ReadLines($fileName)) {
                 $content.Add($text)
                 if (++$count -ge 100) {

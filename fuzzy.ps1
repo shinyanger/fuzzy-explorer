@@ -200,7 +200,7 @@ function ListDirectory {
         }
         $result.operation = $output[0]
         for ($i = 1; $i -lt $output.Count; $i++) {
-            $entry = $entries.Find({ param($item) $item.details -eq $output[$i] })
+            $entry = $entries.Find({ param($item) $item.details.Equals($output[$i]) })
             if ((-not $entry.name.Equals("..")) -or ([List[string]]("enter", "right")).Contains($output[0])) {
                 $item = Get-Item $entry.name -Force
                 $result.selectedFiles.Add($item)

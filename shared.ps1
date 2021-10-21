@@ -26,13 +26,13 @@ function FormatColor {
         [short]$BgColor = -1
     )
     if (($FgColor -ge 0) -and ($BgColor -ge 0)) {
-        "`e[${fgCode}${FgColor};${bgCode}${BgColor}m${str}`e[0m"
+        [string]::Format("`e[{0}{1};{2}{3}m{4}`e[0m", $fgCode, $FgColor, $bgCode, $BgColor, $str)
     }
     elseif (($FgColor -ge 0)) {
-        "`e[${fgCode}${FgColor}m${str}`e[0m"
+        [string]::Format("`e[{0}{1}m{2}`e[0m", $fgCode, $FgColor, $str)
     }
     elseif ($BgColor -ge 0) {
-        "`e[${bgCode}${BgColor}m${str}`e[0m"
+        [string]::Format("`e[{0}{1}m{2}`e[0m", $bgCode, $BgColor, $str)
     }
     else {
         $str
