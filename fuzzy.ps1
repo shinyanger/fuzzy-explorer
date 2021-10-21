@@ -523,7 +523,7 @@ function ProcessCommand {
             break
         }
         Default {
-            $externalCommand = $extensions.commands.Where( { [string[]]($PSItem.id) -contains $commandId } )
+            $externalCommand = $extensions.commands.Where({ ($PSItem.id -eq $commandId) -or ($PSItem.aliases -contains $commandId) })
             if ($externalCommand) {
                 if ($externalCommand.type -eq "file") {
                     foreach ($selectedFile in $selectedFiles) {
