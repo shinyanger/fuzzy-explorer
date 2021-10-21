@@ -1,3 +1,6 @@
+using namespace System.Collections.Generic
+using namespace System.Text.Json
+
 $sharedFile = Join-Path -Path $PSScriptRoot -ChildPath "shared.ps1"
 . $sharedFile
 
@@ -5,7 +8,7 @@ $helperFile = Join-Path -Path $PSScriptRoot -ChildPath "helper.ps1"
 $settingsFile = Join-Path -Path $PSScriptRoot -ChildPath "settings.json"
 $extensionsFile = Join-Path -Path $PSScriptRoot -ChildPath "extensions.json"
 $bookmarkFile = Join-Path -Path $PSScriptRoot -ChildPath "bookmark.json"
-$fzfDefaultParams = @("--layout=reverse", "--border", "--info=inline")
+$fzfDefaultParams = ("--layout=reverse", "--border", "--info=inline")
 
 enum ClipboardMode {
     None
@@ -23,16 +26,16 @@ class Settings {
 
 class Command {
     [string]$id
-    [System.Collections.Generic.List[string]]$aliases
+    [List[string]]$aliases
     [string]$description
     [string]$shortcut
     Command() {
-        $this.aliases = [System.Collections.Generic.List[string]]@()
+        $this.aliases = [List[string]]::new()
         $this.shortcut = [string]::Empty
     }
     Command(
         [string]$id,
-        [System.Collections.Generic.List[string]]$aliases,
+        [List[string]]$aliases,
         [string]$description,
         [string]$shortcut
     ) {
@@ -50,7 +53,7 @@ class FileCommand : Command {
     }
     FileCommand(
         [string]$id,
-        [System.Collections.Generic.List[string]]$aliases,
+        [List[string]]$aliases,
         [string]$description,
         [string]$shortcut,
         [bool]$multiSupport
@@ -73,7 +76,7 @@ class ExternalCommand : FileCommand, System.ICloneable {
 }
 
 class Extensions {
-    [System.Collections.Generic.List[ExternalCommand]]$commands
+    [List[ExternalCommand]]$commands
 }
 
 class DirEntry {
@@ -106,9 +109,9 @@ class SettingEntry {
 function ListDirectory {
     $result = [PSCustomObject]@{
         operation     = [string]::Empty
-        selectedFiles = [System.Collections.Generic.List[System.IO.FileSystemInfo]]@()
+        selectedFiles = [List[System.IO.FileSystemInfo]]::new()
     }
-    $entries = [System.Collections.Generic.List[DirEntry]]::new()
+    $entries = [List[DirEntry]]::new()
     & {
         if ($settings.showDetails) {
             $rows = GetDirHeader
@@ -133,8 +136,8 @@ function ListDirectory {
             $items = Get-ChildItem -Force -Attributes $attributes
             SortDir $items
         }
-        $rows = [System.Collections.Generic.List[string]](GetDirRows $items)
-        $displays = [System.Collections.Generic.List[string]](ColorizeRows $items $rows)
+        $rows = [List[string]](GetDirRows $items)
+        $displays = [List[string]](ColorizeRows $items $rows)
         for ($i = 0; $i -lt $items.Count; $i++) {
             $entries.Add([DirEntry]::new($items[$i].Name, $rows[$i], $displays[$i]))
         }
@@ -152,13 +155,21 @@ function ListDirectory {
         $expect = "left,right,:,f5"
         $internalShortcuts = "ctrl-q,ctrl-e,ctrl-p,ctrl-j,del,f1,f2"
         $expect += ",${internalShortcuts}"
-        $externalShortcuts = $extensions.commands.shortcut.Where({ $PSItem }) -join ","
+        $externalShortcuts = & {
+            $shortcuts = [List[string]]::new()
+            foreach ($command in $extensions.commands) {
+                if ($command.shortcut) {
+                    $shortcuts.Add($command.shortcut)
+                }
+            }
+            [string]::Join(',', $shortcuts)
+        }
         if ($externalShortcuts) {
             $expect += ",${externalShortcuts}"
         }
         $expect
     }
-    $fzfParams = [System.Collections.Generic.List[string]]@(
+    $fzfParams = [List[string]](
         "--height=80%",
         "--prompt=${location}> ",
         "--multi",
@@ -167,7 +178,7 @@ function ListDirectory {
     )
     if ($settings.showDetails) {
         $fzfParams.AddRange(
-            [System.Collections.Generic.List[string]]@(
+            [List[string]](
                 "--header-lines=2",
                 "--nth=3..",
                 "--delimiter=\s{2,}\d*\s"
@@ -190,7 +201,7 @@ function ListDirectory {
         $result.operation = $output[0]
         for ($i = 1; $i -lt $output.Count; $i++) {
             $entry = $entries.Find({ param($item) $item.details -eq $output[$i] })
-            if (($entry.name -ne "..") -or (("enter", "right") -contains $output[0])) {
+            if ((-not $entry.name.Equals("..")) -or ([List[string]]("enter", "right")).Contains($output[0])) {
                 $item = Get-Item $entry.name -Force
                 $result.selectedFiles.Add($item)
             }
@@ -205,7 +216,7 @@ function ListDirectory {
 function ProcessOperation {
     param (
         [string]$operation,
-        [System.Collections.Generic.List[System.IO.FileSystemInfo]]$selectedFiles
+        [List[System.IO.FileSystemInfo]]$selectedFiles
     )
     $result = [PSCustomObject]@{
         commandMode = $false
@@ -229,7 +240,7 @@ function ProcessOperation {
             Set-Location ..
             break
         }
-        { ("enter", "right") -contains $PSItem } {
+        { ([List[string]]("enter", "right")).Contains($PSItem) } {
             if ($selectedFiles.Count -eq 1) {
                 $selectedFile = $selectedFiles[0]
                 if ($selectedFile.PSIsContainer) {
@@ -262,44 +273,44 @@ function ProcessOperation {
 function ListCommands {
     param (
         [string]$shortcut,
-        [System.Collections.Generic.List[System.IO.FileSystemInfo]]$selectedFiles
+        [List[System.IO.FileSystemInfo]]$selectedFiles
     )
-    $commands = [System.Collections.Generic.List[Command]]@(
-        [Command]::new("help", @(), "print help", "f1")
-        [Command]::new("quit", @("exit"), "quit explorer", "ctrl-q")
-        [Command]::new("set", @(), "change setting", [string]::Empty)
-        [Command]::new("new", @("touch"), "create new file", [string]::Empty)
-        [Command]::new("mkdir", @(), "create new directory", [string]::Empty)
-        [Command]::new("fd", @("find"), "find file/directory", "ctrl-p")
-        [Command]::new("rg", @("grep", "search"), "search files contents", [string]::Empty)
-        [Command]::new("jump", @(), "go to path in bookmark", "ctrl-j")
+    $commands = [List[Command]](
+        [Command]::new("help", [List[string]]::new(), "print help", "f1"),
+        [Command]::new("quit", [List[string]]("exit"), "quit explorer", "ctrl-q"),
+        [Command]::new("set", [List[string]]::new(), "change setting", [string]::Empty),
+        [Command]::new("new", [List[string]]("touch"), "create new file", [string]::Empty),
+        [Command]::new("mkdir", [List[string]]::new(), "create new directory", [string]::Empty),
+        [Command]::new("fd", [List[string]]("find"), "find file/directory", "ctrl-p"),
+        [Command]::new("rg", [List[string]]("grep", "search"), "search files contents", [string]::Empty),
+        [Command]::new("jump", [List[string]]::new(), "go to path in bookmark", "ctrl-j")
     )
     if ($register.bookmark.Contains($PWD.ToString())) {
-        $commands.Add([Command]::new("unmark", @(), "remove current path in bookmark", [string]::Empty))
+        $commands.Add([Command]::new("unmark", [List[string]]::new(), "remove current path in bookmark", [string]::Empty))
     }
     else {
-        $commands.Add([Command]::new("mark", @(), "add current path in bookmark", [string]::Empty))
+        $commands.Add([Command]::new("mark", [List[string]]::new(), "add current path in bookmark", [string]::Empty))
     }
     foreach ($command in $extensions.commands) {
-        if ($command.type -eq "common") {
+        if ($command.type.Equals("common")) {
             $commands.Add($command)
         }
     }
-    if ($selectedFiles) {
+    if ($selectedFiles.Count -gt 0) {
         $fileCommands = & {
-            $fileCommands = [System.Collections.Generic.List[FileCommand]]@(
-                [FileCommand]::new("cp", @("copy"), "mark '{0}' for copy", [string]::Empty, $true)
-                [FileCommand]::new("mv", @("move", "cut"), "mark '{0}' for move", [string]::Empty, $true)
-                [FileCommand]::new("ln", @("link"), "mark '{0}' for link", [string]::Empty, $true)
-                [FileCommand]::new("rm", @("remove", "del"), "remove '{0}'", "del", $true)
-                [FileCommand]::new("ren", @(), "rename '{0}'", "f2", $false)
-                [FileCommand]::new("duplicate", @(), "duplicate '{0}'", [string]::Empty, $true)
+            $fileCommands = [List[FileCommand]](
+                [FileCommand]::new("cp", [List[string]]("copy"), "mark '{0}' for copy", [string]::Empty, $true),
+                [FileCommand]::new("mv", [List[string]]("move", "cut"), "mark '{0}' for move", [string]::Empty, $true),
+                [FileCommand]::new("ln", [List[string]]("link"), "mark '{0}' for link", [string]::Empty, $true),
+                [FileCommand]::new("rm", [List[string]]("remove", "del"), "remove '{0}'", "del", $true),
+                [FileCommand]::new("ren", [List[string]]::new(), "rename '{0}'", "f2", $false),
+                [FileCommand]::new("duplicate", [List[string]]::new(), "duplicate '{0}'", [string]::Empty, $true)
             )
             if ($env:EDITOR) {
-                $fileCommands.Add([FileCommand]::new("edit", @(), "open '{0}' with editor", "ctrl-e", $false))
+                $fileCommands.Add([FileCommand]::new("edit", [List[string]]::new(), "open '{0}' with editor", "ctrl-e", $false))
             }
             foreach ($command in $extensions.commands) {
-                if ($command.type -eq "file") {
+                if ($command.type.Equals("file")) {
                     $fileCommands.Add($command.Clone())
                 }
             }
@@ -307,41 +318,47 @@ function ListCommands {
         }
         foreach ($command in $fileCommands) {
             if (($selectedFiles.Count -eq 1) -or $command.multiSupport) {
-                $names = $selectedFiles.Name -join ";"
-                $command.description = $command.description -f $names
+                $names = & {
+                    $names = [List[string]]::new()
+                    foreach ($selectedFile in $selectedFiles) {
+                        $names.Add($selectedFile.Name)
+                    }
+                    [string]::Join(';', $names)
+                }
+                $command.description = [string]::Format($command.description, $names)
                 $commands.Add($command)
             }
         }
     }
     if ($register.clipboard) {
         if ($register.clipboard.Count -gt 1) {
-            $name = "<$($register.clipboard.Count) files>"
+            $name = [string]::Format("<{0} files>", $register.clipboard.Count)
         }
         else {
             $name = $register.clipboard[0].FullName
         }
-        $commands.Add([Command]::new("paste", @(), "paste '${name}' in current directory", [string]::Empty, $false))
+        $commands.Add([Command]::new("paste", [List[string]]::new(), "paste '${name}' in current directory", [string]::Empty, $false))
     }
     $commandId = [string]::Empty
     if ($shortcut) {
-        $command = $commands.Find({ param($item) $item.shortcut -eq $shortcut })
+        $command = $commands.Find({ param($item) $item.shortcut.Equals($shortcut) })
         if ($command) {
             $commandId = $command.id
         }
         return $commandId
     }
     $displays = foreach ($command in $commands) {
-        $ids = [System.Collections.Generic.List[string]]($command.id)
+        $ids = [List[string]]($command.id)
         $ids.AddRange($command.aliases)
         foreach ($id in $ids) {
-            $display = "{0,-15} : {1}" -f "[${id}]", $command.description
+            $display = [string]::Format("{0,-15} : {1}", "[${id}]", $command.description)
             if ($command.shortcut) {
-                $display += (" <{0}>" -f (FormatColor $command.shortcut -FgColor $colors.shortcut))
+                $display += ([string]::Format(" <{0}>", (FormatColor $command.shortcut -FgColor $colors.shortcut)))
             }
             $display
         }
     }
-    $fzfParams = @("--height=40%", "--nth=1", "--prompt=:", "--exact", "--ansi")
+    $fzfParams = ("--height=40%", "--nth=1", "--prompt=:", "--exact", "--ansi")
     $output = $displays | fzf $fzfDefaultParams $fzfParams
     if ($LASTEXITCODE -eq 0) {
         $null = $output -match "^\[(?<commandId>\w+)\]"
@@ -353,7 +370,7 @@ function ListCommands {
 function ProcessCommand {
     param (
         [string]$commandId,
-        [System.Collections.Generic.List[System.IO.FileSystemInfo]]$selectedFiles
+        [List[System.IO.FileSystemInfo]]$selectedFiles
     )
     switch ($commandId) {
         "help" {
@@ -372,7 +389,7 @@ function ProcessCommand {
             $null = [System.Console]::ReadKey($true)
             break
         }
-        { ("quit", "exit") -contains $PSItem } {
+        { ([List[string]]("quit", "exit")).Contains($PSItem) } {
             $script:continue = $false
             break
         }
@@ -380,7 +397,7 @@ function ProcessCommand {
             ChangeSetting
             break
         }
-        { ("new", "touch") -contains $PSItem } {
+        { ([List[string]]("new", "touch")).Contains($PSItem) } {
             New-Item -ItemType File
             break                        
         }
@@ -388,13 +405,13 @@ function ProcessCommand {
             New-Item -ItemType Directory
             break
         }
-        { ("fd", "find") -contains $PSItem } {
-            $fzfParams = [System.Collections.Generic.List[string]]@("--height=80%", "--prompt=:${PSItem} ")
+        { ([List[string]]("fd", "find")).Contains($PSItem) } {
+            $fzfParams = [List[string]]("--height=80%", "--prompt=:${PSItem} ")
             if ($settings.preview) {
                 $fzfParams.Add("--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {}")
             }
             if (IsProgramInstalled "fd") {
-                $fdParams = @("--color=always")
+                $fdParams = ("--color=always")
                 $fzfParams.Add("--ansi")
                 $output = fd $fdParams | fzf $fzfDefaultParams $fzfParams
             }
@@ -411,8 +428,8 @@ function ProcessCommand {
             }
             break
         }
-        { ("rg", "grep", "search") -contains $PSItem } {
-            $fzfParams = [System.Collections.Generic.List[string]]@(
+        { ([List[string]]("rg", "grep", "search")).Contains($PSItem) } {
+            $fzfParams = [List[string]](
                 "--height=80%",
                 "--prompt=:${PSItem} ",
                 "--delimiter=:",
@@ -421,14 +438,14 @@ function ProcessCommand {
             )
             if ($settings.preview) {
                 $fzfParams.AddRange(
-                    [System.Collections.Generic.List[string]]@(
+                    [List[string]](
                         "--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {1} {2}",
                         "--preview-window=+{2}-/2"
                     )
                 )
             }
             if (IsProgramInstalled "rg") {
-                $rgParams = @("--line-number", "--no-heading", "--color=always", "--smart-case")
+                $rgParams = ("--line-number", "--no-heading", "--color=always", "--smart-case")
                 $initParams = $rgParams + '""'
                 $reloadParams = $rgParams + "{q}"
                 $fzfParams.Add("--bind=change:reload:rg ${reloadParams}")
@@ -453,7 +470,7 @@ function ProcessCommand {
             break
         }
         "jump" {
-            $fzfParams = [System.Collections.Generic.List[string]]@("--height=40%", "--prompt=:${PSItem} ")
+            $fzfParams = [List[string]]("--height=40%", "--prompt=:${PSItem} ")
             if ($settings.preview) {
                 $fzfParams.Add("--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {}")
             }
@@ -475,22 +492,22 @@ function ProcessCommand {
             & $env:EDITOR $selectedFiles[0].Name
             break
         }
-        { ("cp", "copy") -contains $PSItem } {
+        { ([List[string]]("cp", "copy")).Contains($PSItem) } {
             $register.clipboard = $selectedFiles
             $register.clipMode = [ClipboardMode]::Copy
             break
         }
-        { ("mv", "move", "cut") -contains $PSItem } {
+        { ([List[string]]("mv", "move", "cut")).Contains($PSItem) } {
             $register.clipboard = $selectedFiles
             $register.clipMode = [ClipboardMode]::Cut
             break
         }
-        { ("ln", "link") -contains $PSItem } {
+        { ([List[string]]("ln", "link")).Contains($PSItem) } {
             $register.clipboard = $selectedFiles
             $register.clipMode = [ClipboardMode]::Link
             break
         }
-        { ("rm", "remove", "del") -contains $PSItem } {
+        { ([List[string]]("rm", "remove", "del")).Contains($PSItem) } {
             Remove-Item -Path $selectedFiles -Recurse -Force -Confirm
             break
         }
@@ -501,10 +518,10 @@ function ProcessCommand {
         "duplicate" {
             foreach ($selectedFile in $selectedFiles) {
                 $baseName = $selectedFile.BaseName
-                $destinationName = "{0} copy{1}" -f $baseName, $selectedFile.Extension
+                $destinationName = [string]::Format("{0} copy{1}", $baseName, $selectedFile.Extension)
                 $index = 1
                 while (Test-Path -Path (Join-Path -Path $PWD -ChildPath $destinationName)) {
-                    $destinationName =  "{0} copy {1}{2}" -f $baseName, ++$index, $selectedFile.Extension
+                    $destinationName = [string]::Format("{0} copy {1}{2}", $baseName, ++$index, $selectedFile.Extension)
                 }
                 Copy-Item -Path $selectedFile -Destination $destinationName
             }
@@ -536,11 +553,11 @@ function ProcessCommand {
             break
         }
         Default {
-            $externalCommand = $extensions.commands.Find({ param($item) ($item.id -eq $commandId) -or ($item.aliases -contains $commandId) })
+            $externalCommand = $extensions.commands.Find({ param($item) $item.id.Equals($commandId) -or $item.aliases.Contains($commandId) })
             if ($externalCommand) {
-                if ($externalCommand.type -eq "file") {
+                if ($externalCommand.type.Equals("file")) {
                     foreach ($selectedFile in $selectedFiles) {
-                        $expression = $externalCommand.expression -f $selectedFile.Name
+                        $expression = [string]::Format($externalCommand.expression, $selectedFile.Name)
                         Invoke-Expression $expression
                     }
                 }
@@ -555,25 +572,25 @@ function ProcessCommand {
 
 function ChangeSetting {
     $entries = & {
-        $entries = [System.Collections.Generic.List[SettingEntry]]@(
-            [SettingEntry]::new("preview", "show preview window on")
-            [SettingEntry]::new("nopreview", "show preview window off")
-            [SettingEntry]::new("details", "show directory details on")
-            [SettingEntry]::new("nodetails", "show directory details off")
-            [SettingEntry]::new("hidden", "show hidden files on")
+        $entries = [List[SettingEntry]](
+            [SettingEntry]::new("preview", "show preview window on"),
+            [SettingEntry]::new("nopreview", "show preview window off"),
+            [SettingEntry]::new("details", "show directory details on"),
+            [SettingEntry]::new("nodetails", "show directory details off"),
+            [SettingEntry]::new("hidden", "show hidden files on"),
             [SettingEntry]::new("nohidden", "show hidden files off")
         )
-        $sortEntries = [System.Collections.Generic.List[SettingEntry]]@(
-            [SettingEntry]::new("default", "sort by default")
-            [SettingEntry]::new("nameasc", "sort by name ascending")
-            [SettingEntry]::new("namedesc", "sort by name descending")
-            [SettingEntry]::new("sizeasc", "sort by size ascending")
-            [SettingEntry]::new("sizedesc", "sort by size descending")
-            [SettingEntry]::new("timeasc", "sort by time ascending")
+        $sortEntries = [List[SettingEntry]](
+            [SettingEntry]::new("default", "sort by default"),
+            [SettingEntry]::new("nameasc", "sort by name ascending"),
+            [SettingEntry]::new("namedesc", "sort by name descending"),
+            [SettingEntry]::new("sizeasc", "sort by size ascending"),
+            [SettingEntry]::new("sizedesc", "sort by size descending"),
+            [SettingEntry]::new("timeasc", "sort by time ascending"),
             [SettingEntry]::new("timedesc", "sort by time descending")
         )
         foreach ($entry in $sortEntries) {
-            $entry.id = "sort=$($entry.id)"
+            $entry.id = [string]::Format("sort={0}", $entry.id)
             $entries.Add($entry)
         }
         if ($env:EDITOR) {
@@ -582,9 +599,9 @@ function ChangeSetting {
         $entries
     }
     $displays = foreach ($entry in $entries) {
-        "{0,-15} : {1}" -f "[$($entry.id)]", $entry.description
+        [string]::Format("{0,-15} : {1}", "[$($entry.id)]", $entry.description)
     }
-    $fzfParams = @("--height=40%", "--prompt=:${PSItem} ", "--exact")
+    $fzfParams = ("--height=40%", "--prompt=:${PSItem} ", "--exact")
     $output = $displays | fzf $fzfDefaultParams $fzfParams
     if ($LASTEXITCODE -ne 0) {
         return
@@ -616,28 +633,28 @@ function ChangeSetting {
         Default {}
     }
     & {
-        $content = [System.Text.Json.JsonSerializer]::Serialize($settings, [Settings])
+        $content = [JsonSerializer]::Serialize($settings, [Settings])
         [System.IO.File]::WriteAllLines($tempSettingsFile, $content)
     }
 }
 
 function Initialize {
     $script:register = [PSCustomObject]@{
-        clipboard = @()
+        clipboard = [List[System.IO.FileSystemInfo]]::new()
         clipMode  = [ClipboardMode]::None
-        bookmark  = [System.Collections.Generic.List[string]]::new()
+        bookmark  = [List[string]]::new()
     }
     if (Test-Path -Path $bookmarkFile) {
         $content = [System.IO.File]::ReadAllLines($bookmarkFile)
-        $register.bookmark = [System.Text.Json.JsonSerializer]::Deserialize($content, [System.Collections.Generic.List[string]])
+        $register.bookmark = [JsonSerializer]::Deserialize($content, [List[string]])
     }
     $script:settings = & {
         $content = [System.IO.File]::ReadAllLines($settingsFile)
-        [System.Text.Json.JsonSerializer]::Deserialize($content, [Settings])
+        [JsonSerializer]::Deserialize($content, [Settings])
     }
     $script:extensions = & {
         $content = [System.IO.File]::ReadAllLines($extensionsFile)
-        [System.Text.Json.JsonSerializer]::Deserialize($content, [Extensions])
+        [JsonSerializer]::Deserialize($content, [Extensions])
     }
     $script:tempSettingsFile = New-TemporaryFile
     Copy-Item -Path $settingsFile -Destination $tempSettingsFile -Force
@@ -646,7 +663,7 @@ function Initialize {
 
 function Finalize {
     & {
-        $content = [System.Text.Json.JsonSerializer]::Serialize($register.bookmark, [System.Collections.Generic.List[string]])
+        $content = [JsonSerializer]::Serialize($register.bookmark, [List[string]])
         [System.IO.File]::WriteAllLines($bookmarkFile, $content)
     }
     Remove-Item -Path $tempSettingsFile -Force
