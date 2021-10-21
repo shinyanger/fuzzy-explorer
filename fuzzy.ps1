@@ -76,17 +76,32 @@ class Extensions {
     [ExternalCommand[]]$commands
 }
 
+class DirEntry {
+    [string]$name
+    [string]$details
+    [string]$display
+    DirEntry(
+        [string]$name,
+        [string]$details,
+        [string]$display
+    ) {
+        $this.name = $name
+        $this.details = $details
+        $this.display = $display
+    }
+}
+
 function ListDirectory {
     $result = [PSCustomObject]@{
         operation     = [string]::Empty
         selectedFiles = @()
     }
-    $entries = [System.Collections.Generic.List[PSCustomObject]]::new()
+    $entries = [System.Collections.Generic.List[DirEntry]]::new()
     & {
         if ($settings.showDetails) {
             $rows = GetDirHeader
             foreach ($row in $rows) {
-                $entries.Add( [PSCustomObject]@{ name = [string]::Empty; details = $row; display = $row } )
+                $entries.Add([DirEntry]::new([string]::Empty, $row, $row))
             }
         }
         & {
@@ -99,7 +114,7 @@ function ListDirectory {
                 $row = $fields[3].Substring(0, $index) + ".."
             }
             $display = ColorizeRows $item $row
-            $entries.Add( [PSCustomObject]@{ name = ".."; details = $row; display = $display } )
+            $entries.Add([DirEntry]::new("..", $row, $display))
         }
         $items = & {
             $attributes = GetDirAttributes
@@ -109,7 +124,7 @@ function ListDirectory {
         $rows = [string[]](GetDirRows $items)
         $displays = [string[]](ColorizeRows $items $rows)
         for ($i = 0; $i -lt $items.Count; $i++) {
-            $entries.Add( [PSCustomObject]@{ name = $items[$i].Name; details = $rows[$i]; display = $displays[$i] } )
+            $entries.Add([DirEntry]::new($items[$i].Name, $rows[$i], $displays[$i]))
         }
     }
     $location = & {
