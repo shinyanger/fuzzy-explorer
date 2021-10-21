@@ -27,7 +27,7 @@ class Command {
     [string]$description
     [string]$shortcut
     Command() {
-        $this.aliases = @()
+        $this.aliases = [System.Collections.Generic.List[string]]@()
         $this.shortcut = [string]::Empty
     }
     Command(
@@ -106,7 +106,7 @@ class SettingEntry {
 function ListDirectory {
     $result = [PSCustomObject]@{
         operation     = [string]::Empty
-        selectedFiles = @()
+        selectedFiles = [System.Collections.Generic.List[System.IO.FileSystemInfo]]@()
     }
     $entries = [System.Collections.Generic.List[DirEntry]]::new()
     & {
@@ -188,10 +188,11 @@ function ListDirectory {
             $output[0] = "enter"
         }
         $result.operation = $output[0]
-        $result.selectedFiles = for ($i = 1; $i -lt $output.Count; $i++) {
+        for ($i = 1; $i -lt $output.Count; $i++) {
             $entry = $entries.Find({ param($item) $item.details -eq $output[$i] })
             if (($entry.name -ne "..") -or (("enter", "right") -contains $output[0])) {
-                Get-Item $entry.name -Force
+                $item = Get-Item $entry.name -Force
+                $result.selectedFiles.Add($item)
             }
         }
     }
@@ -204,7 +205,7 @@ function ListDirectory {
 function ProcessOperation {
     param (
         [string]$operation,
-        [System.IO.FileSystemInfo[]]$selectedFiles
+        [System.Collections.Generic.List[System.IO.FileSystemInfo]]$selectedFiles
     )
     $result = [PSCustomObject]@{
         commandMode = $false
@@ -261,7 +262,7 @@ function ProcessOperation {
 function ListCommands {
     param (
         [string]$shortcut,
-        [System.IO.FileSystemInfo[]]$selectedFiles
+        [System.Collections.Generic.List[System.IO.FileSystemInfo]]$selectedFiles
     )
     $commands = [System.Collections.Generic.List[Command]]@(
         [Command]::new("help", @(), "print help", "f1")
@@ -352,7 +353,7 @@ function ListCommands {
 function ProcessCommand {
     param (
         [string]$commandId,
-        [System.IO.FileSystemInfo[]]$selectedFiles
+        [System.Collections.Generic.List[System.IO.FileSystemInfo]]$selectedFiles
     )
     switch ($commandId) {
         "help" {
