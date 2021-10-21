@@ -14,7 +14,7 @@ enum ClipboardMode {
     Link
 }
 
-class Setting {
+class Settings {
     [bool]$preview
     [bool]$showDetails
     [bool]$showHidden
@@ -91,6 +91,18 @@ class DirEntry {
     }
 }
 
+class SettingEntry {
+    [string]$id
+    [string]$description
+    SettingEntry(
+        [string]$id,
+        [string]$description
+    ) {
+        $this.id = $id
+        $this.description = $description
+    }
+}
+
 function ListDirectory {
     $result = [PSCustomObject]@{
         operation     = [string]::Empty
@@ -121,8 +133,8 @@ function ListDirectory {
             $items = Get-ChildItem -Force -Attributes $attributes
             SortDir $items
         }
-        $rows = [string[]](GetDirRows $items)
-        $displays = [string[]](ColorizeRows $items $rows)
+        $rows = [System.Collections.Generic.List[string]](GetDirRows $items)
+        $displays = [System.Collections.Generic.List[string]](ColorizeRows $items $rows)
         for ($i = 0; $i -lt $items.Count; $i++) {
             $entries.Add([DirEntry]::new($items[$i].Name, $rows[$i], $displays[$i]))
         }
@@ -140,7 +152,7 @@ function ListDirectory {
         $expect = "left,right,:,f5"
         $internalShortcuts = "ctrl-q,ctrl-e,ctrl-p,ctrl-j,del,f1,f2"
         $expect += ",${internalShortcuts}"
-        $externalShortcuts = $extensions.commands.shortcut.Where( { $PSItem } ) -join ","
+        $externalShortcuts = $extensions.commands.shortcut.Where({ $PSItem }) -join ","
         if ($externalShortcuts) {
             $expect += ",${externalShortcuts}"
         }
@@ -542,29 +554,29 @@ function ProcessCommand {
 
 function ChangeSetting {
     $entries = & {
-        $entries = [System.Collections.Generic.List[PSCustomObject]]@(
-            [PSCustomObject]@{ id = "preview"; description = "show preview window on" }
-            [PSCustomObject]@{ id = "nopreview"; description = "show preview window off" }
-            [PSCustomObject]@{ id = "details"; description = "show directory details on" }
-            [PSCustomObject]@{ id = "nodetails"; description = "show directory details off" }
-            [PSCustomObject]@{ id = "hidden"; description = "show hidden files on" }
-            [PSCustomObject]@{ id = "nohidden"; description = "show hidden files off" }
+        $entries = [System.Collections.Generic.List[SettingEntry]]@(
+            [SettingEntry]::new("preview", "show preview window on")
+            [SettingEntry]::new("nopreview", "show preview window off")
+            [SettingEntry]::new("details", "show directory details on")
+            [SettingEntry]::new("nodetails", "show directory details off")
+            [SettingEntry]::new("hidden", "show hidden files on")
+            [SettingEntry]::new("nohidden", "show hidden files off")
         )
-        $sortEntries = [System.Collections.Generic.List[PSCustomObject]]@(
-            [PSCustomObject]@{ id = "default"; description = "sort by default" }
-            [PSCustomObject]@{ id = "nameasc"; description = "sort by name ascending" }
-            [PSCustomObject]@{ id = "namedesc"; description = "sort by name descending" }
-            [PSCustomObject]@{ id = "sizeasc"; description = "sort by size ascending" }
-            [PSCustomObject]@{ id = "sizedesc"; description = "sort by size descending" }
-            [PSCustomObject]@{ id = "timeasc"; description = "sort by time ascending" }
-            [PSCustomObject]@{ id = "timedesc"; description = "sort by time descending" }
+        $sortEntries = [System.Collections.Generic.List[SettingEntry]]@(
+            [SettingEntry]::new("default", "sort by default")
+            [SettingEntry]::new("nameasc", "sort by name ascending")
+            [SettingEntry]::new("namedesc", "sort by name descending")
+            [SettingEntry]::new("sizeasc", "sort by size ascending")
+            [SettingEntry]::new("sizedesc", "sort by size descending")
+            [SettingEntry]::new("timeasc", "sort by time ascending")
+            [SettingEntry]::new("timedesc", "sort by time descending")
         )
         foreach ($entry in $sortEntries) {
             $entry.id = "sort=$($entry.id)"
             $entries.Add($entry)
         }
         if ($env:EDITOR) {
-            $entries.Add( @{ id = "all"; description = "edit settings file" } )
+            $entries.Add([SettingEntry]::new("all", "edit settings file"))
         }
         $entries
     }
@@ -619,7 +631,7 @@ function Initialize {
     }
     $script:settings = & {
         $content = [System.IO.File]::ReadAllLines($settingsFile)
-        [System.Text.Json.JsonSerializer]::Deserialize($content, [Setting])
+        [System.Text.Json.JsonSerializer]::Deserialize($content, [Settings])
     }
     $script:extensions = & {
         $content = [System.IO.File]::ReadAllLines($extensionsFile)
