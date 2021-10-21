@@ -14,6 +14,68 @@ enum ClipboardMode {
     Link
 }
 
+class Setting {
+    [bool]$preview
+    [bool]$showDetails
+    [bool]$showHidden
+    [string]$sortBy
+}
+
+class Command {
+    [string]$id
+    [string[]]$aliases
+    [string]$description
+    [string]$shortcut
+    Command() {
+        $this.aliases = @()
+        $this.shortcut = [string]::Empty
+    }
+    Command(
+        [string]$id,
+        [string[]]$aliases,
+        [string]$description,
+        [string]$shortcut
+    ) {
+        $this.id = $id
+        $this.aliases = $aliases
+        $this.description = $description
+        $this.shortcut = $shortcut
+    }
+}
+
+class FileCommand : Command {
+    [bool]$multiSupport
+    FileCommand() : base() {
+        $this.multiSupport = $false
+    }
+    FileCommand(
+        [string]$id,
+        [string[]]$aliases,
+        [string]$description,
+        [string]$shortcut,
+        [bool]$multiSupport
+    ) : base($id, $aliases, $description, $shortcut) {
+        $this.multiSupport = $multiSupport
+    }
+}
+
+class ExternalCommand : FileCommand, System.ICloneable {
+    [string]$type
+    [string]$expression
+    [object]Clone() {
+        $clone = [ExternalCommand]::new()
+        $properties = Get-Member -InputObject $this -MemberType Property
+        foreach ($property in $properties) {
+            $clone.$($property.Name) = $this.$($property.Name)
+        }
+        return $clone
+    }
+}
+
+class Extensions {
+    [ExternalCommand[]]$commands
+}
+
 function ListDirectory {
     $result = [PSCustomObject]@{
         operation     = [string]::Empty
@@ -174,38 +236,44 @@ function ListCommands {
         [string]$shortcut,
         [System.IO.FileSystemInfo[]]$selectedFiles
     )
-    $commands = [System.Collections.Generic.List[PSCustomObject]]@(
-        [PSCustomObject]@{ id = "help"; description = "print help"; shortcut = "f1" }
-        [PSCustomObject]@{ id = ("quit", "exit"); description = "quit explorer"; shortcut = "ctrl-q" }
-        [PSCustomObject]@{ id = "set"; description = "change setting" }
-        [PSCustomObject]@{ id = ("new", "touch"); description = "create new file" }
-        [PSCustomObject]@{ id = "mkdir"; description = "create new directory" }
-        [PSCustomObject]@{ id = ("fd", "find"); description = "find file/directory"; shortcut = "ctrl-p" }
-        [PSCustomObject]@{ id = ("rg", "grep", "search"); description = "search files contents" }
-        [PSCustomObject]@{ id = "jump"; description = "go to path in bookmark"; shortcut = "ctrl-j" }
+    $commands = [System.Collections.Generic.List[Command]]@(
+        [Command]::new("help", @(), "print help", "f1")
+        [Command]::new("quit", @("exit"), "quit explorer", "ctrl-q")
+        [Command]::new("set", @(), "change setting", [string]::Empty)
+        [Command]::new("new", @("touch"), "create new file", [string]::Empty)
+        [Command]::new("mkdir", @(), "create new directory", [string]::Empty)
+        [Command]::new("fd", @("find"), "find file/directory", "ctrl-p")
+        [Command]::new("rg", @("grep", "search"), "search files contents", [string]::Empty)
+        [Command]::new("jump", @(), "go to path in bookmark", "ctrl-j")
     )
     if ($register.bookmark.Contains($PWD.ToString())) {
-        $commands.Add( [PSCustomObject]@{ id = "unmark"; description = "remove current path in bookmark" } )
+        $commands.Add([Command]::new("unmark", @(), "remove current path in bookmark", [string]::Empty))
     }
     else {
-        $commands.Add( [PSCustomObject]@{ id = "mark"; description = "add current path in bookmark" } )
+        $commands.Add([Command]::new("mark", @(), "add current path in bookmark", [string]::Empty))
     }
-    $commands.AddRange( $extensions.commands.Where( { $PSItem.type -eq "common" } ) )
+    foreach ($command in $extensions.commands) {
+        if ($command.type -eq "common") {
+            $commands.Add($command)
+        }
+    }
     if ($selectedFiles) {
         $fileCommands = & {
-            $fileCommands = [System.Collections.Generic.List[PSCustomObject]]@(
-                [PSCustomObject]@{ id = ("cp", "copy"); description = "mark '{0}' for copy"; multiSupport = $true }
-                [PSCustomObject]@{ id = ("mv", "move", "cut"); description = "mark '{0}' for move"; multiSupport = $true }
-                [PSCustomObject]@{ id = ("ln", "link"); description = "mark '{0}' for link"; multiSupport = $true }
-                [PSCustomObject]@{ id = ("rm", "remove", "del"); description = "remove '{0}'"; shortcut = "del"; multiSupport = $true }
-                [PSCustomObject]@{ id = "ren"; description = "rename '{0}'"; shortcut = "f2" }
-                [PSCustomObject]@{ id = "duplicate"; description = "duplicate '{0}'"; multiSupport = $true }
+            $fileCommands = [System.Collections.Generic.List[FileCommand]]@(
+                [FileCommand]::new("cp", @("copy"), "mark '{0}' for copy", [string]::Empty, $true)
+                [FileCommand]::new("mv", @("move", "cut"), "mark '{0}' for move", [string]::Empty, $true)
+                [FileCommand]::new("ln", @("link"), "mark '{0}' for link", [string]::Empty, $true)
+                [FileCommand]::new("rm", @("remove", "del"), "remove '{0}'", "del", $true)
+                [FileCommand]::new("ren", @(), "rename '{0}'", "f2", $false)
+                [FileCommand]::new("duplicate", @(), "duplicate '{0}'", [string]::Empty, $true)
             )
             if ($env:EDITOR) {
-                $fileCommands.Add( @{ id = "edit"; description = "open '{0}' with editor"; shortcut = "ctrl-e" } )
+                $fileCommands.Add([FileCommand]::new("edit", @(), "open '{0}' with editor", "ctrl-e", $false))
             }
-            foreach ($command in $extensions.commands.Where( { $PSItem.type -eq "file" } )) {
-                $fileCommands.Add($command.PSObject.Copy())
+            foreach ($command in $extensions.commands) {
+                if ($command.type -eq "file") {
+                    $fileCommands.Add($command.Clone())
+                }
             }
             $fileCommands
         }
@@ -224,18 +292,19 @@ function ListCommands {
         else {
             $name = $register.clipboard[0].FullName
         }
-        $commands.Add( @{ id = "paste"; description = "paste '${name}' in current directory" } )
+        $commands.Add([Command]::new("paste", @(), "paste '${name}' in current directory", [string]::Empty, $false))
     }
     $commandId = [string]::Empty
     if ($shortcut) {
         $command = $commands.Where( { $PSItem.shortcut -eq $shortcut } )
         if ($command) {
-            $commandId = ([string[]]($command.id))[0]
+            $commandId = $command.id
         }
         return $commandId
     }
     $displays = foreach ($command in $commands) {
-        $ids = [string[]]($command.id)
+        $ids = [System.Collections.Generic.List[string]]($command.id)
+        $ids.AddRange($command.aliases)
         foreach ($id in $ids) {
             $display = "{0,-15} : {1}" -f "[${id}]", $command.description
             if ($command.shortcut) {
@@ -528,10 +597,19 @@ function Initialize {
         bookmark  = [System.Collections.Generic.List[string]]::new()
     }
     if (Test-Path -Path $bookmarkFile) {
-        $register.bookmark = [System.Collections.Generic.List[string]]([System.IO.File]::ReadAllLines($bookmarkFile) | ConvertFrom-Json)
+        $register.bookmark = & {
+            $content = [System.IO.File]::ReadAllLines($bookmarkFile)
+            [System.Text.Json.JsonSerializer]::Deserialize($content, [System.Collections.Generic.List[string]])
+        }
     }
-    $script:settings = [System.IO.File]::ReadAllLines($settingsFile) | ConvertFrom-Json
-    $script:extensions = [System.IO.File]::ReadAllLines($extensionsFile) | ConvertFrom-Json
+    $script:settings = & {
+        $content = [System.IO.File]::ReadAllLines($settingsFile)
+        [System.Text.Json.JsonSerializer]::Deserialize($content, [Setting])
+    }
+    $script:extensions = & {
+        $content = [System.IO.File]::ReadAllLines($extensionsFile)
+        [System.Text.Json.JsonSerializer]::Deserialize($content, [Extensions])
+    }
     $script:tempSettingsFile = New-TemporaryFile
     Copy-Item -Path $settingsFile -Destination $tempSettingsFile -Force
     $script:continue = $true

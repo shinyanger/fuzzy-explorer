@@ -33,14 +33,16 @@
             "expression": "Set-Clipboard -Value $PWD.ToString()"
         },
         {
-            "id": ["exp", "reveal"],
+            "id": "exp",
+            "aliases": ["reveal"],
             "type": "common",
             "description": "reveal in file explorer",
             "shortcut": "ctrl-r",
             "expression": "Invoke-Item ."
         },
         {
-            "id": ["echo", "print"],
+            "id": "echo",
+            "aliases": ["print"],
             "type": "file",
             "description": "print '{0}' on console",
             "multiSupport": true,
