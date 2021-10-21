@@ -614,7 +614,10 @@ function ChangeSetting {
         }
         Default {}
     }
-    $settings | ConvertTo-Json | Out-File -FilePath $tempSettingsFile
+    & {
+        $content = [System.Text.Json.JsonSerializer]::Serialize($settings, [Settings])
+        [System.IO.File]::WriteAllLines($tempSettingsFile, $content)
+    }
 }
 
 function Initialize {
@@ -624,10 +627,8 @@ function Initialize {
         bookmark  = [System.Collections.Generic.List[string]]::new()
     }
     if (Test-Path -Path $bookmarkFile) {
-        $register.bookmark = & {
-            $content = [System.IO.File]::ReadAllLines($bookmarkFile)
-            [System.Text.Json.JsonSerializer]::Deserialize($content, [System.Collections.Generic.List[string]])
-        }
+        $content = [System.IO.File]::ReadAllLines($bookmarkFile)
+        $register.bookmark = [System.Text.Json.JsonSerializer]::Deserialize($content, [System.Collections.Generic.List[string]])
     }
     $script:settings = & {
         $content = [System.IO.File]::ReadAllLines($settingsFile)
@@ -643,7 +644,10 @@ function Initialize {
 }
 
 function Finalize {
-    $register.bookmark | ConvertTo-Json | Out-File -FilePath $bookmarkFile
+    & {
+        $content = [System.Text.Json.JsonSerializer]::Serialize($register.bookmark, [System.Collections.Generic.List[string]])
+        [System.IO.File]::WriteAllLines($bookmarkFile, $content)
+    }
     Remove-Item -Path $tempSettingsFile -Force
 }
 
