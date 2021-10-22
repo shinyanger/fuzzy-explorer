@@ -17,13 +17,6 @@ enum ClipboardMode {
     Link
 }
 
-class Settings {
-    [bool]$preview
-    [bool]$showDetails
-    [bool]$showHidden
-    [string]$sortBy
-}
-
 class Command {
     [string]$id
     [List[string]]$aliases
@@ -337,7 +330,7 @@ function ListCommands {
         else {
             $name = $register.clipboard[0].FullName
         }
-        $commands.Add([Command]::new("paste", [List[string]]::new(), "paste '${name}' in current directory", [string]::Empty, $false))
+        $commands.Add([Command]::new("paste", [List[string]]::new(), "paste '${name}' in current directory", [string]::Empty))
     }
     $commandId = [string]::Empty
     if ($shortcut) {
@@ -353,7 +346,7 @@ function ListCommands {
         foreach ($id in $ids) {
             $display = [string]::Format("{0,-15} : {1}", "[${id}]", $command.description)
             if ($command.shortcut) {
-                $display += ([string]::Format(" <{0}>", (FormatColor $command.shortcut -FgColor $colors.shortcut)))
+                $display += [string]::Format(" <{0}>", (FormatColor $command.shortcut -FgColor $colors.shortcut))
             }
             $display
         }

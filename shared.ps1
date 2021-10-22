@@ -11,6 +11,13 @@ $colors = [PSCustomObject]@{
     lineNumber = 238
 }
 
+class Settings {
+    [bool]$preview
+    [bool]$showDetails
+    [bool]$showHidden
+    [string]$sortBy
+}
+
 function IsProgramInstalled {
     param (
         [string]$program
@@ -55,7 +62,7 @@ function GetDirAttributes {
 
 function GetDirRows {
     param (
-        [array]$items
+        [List[System.IO.FileSystemInfo]]$items
     )
     if ($items) {
         if ($settings.showDetails) {
@@ -72,8 +79,8 @@ function GetDirRows {
 
 function ColorizeRows {
     param (
-        [array]$items,
-        [array]$rows
+        [List[System.IO.FileSystemInfo]]$items,
+        [List[string]]$rows
     )
     for ($i = 0; $i -lt $items.Count; $i++) {
         $item = $items[$i]

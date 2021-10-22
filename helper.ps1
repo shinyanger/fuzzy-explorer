@@ -1,4 +1,5 @@
 using namespace System.Collections.Generic
+using namespace System.Text.Json
 
 $sharedFile = Join-Path -Path $PSScriptRoot -ChildPath "shared.ps1"
 . $sharedFile
@@ -15,7 +16,10 @@ function Preview {
         $selectedFile = Get-Item $fileName -Force
     }
     if ($selectedFile.PSIsContainer) {
-        $script:settings = [System.IO.File]::ReadAllLines($tempSettingsFile) | ConvertFrom-Json
+        $script:settings = & {
+            $content = [System.IO.File]::ReadAllLines($tempSettingsFile)
+            [JsonSerializer]::Deserialize($content, [Settings])
+        }
         $attributes = GetDirAttributes
         $items = Get-ChildItem $selectedFile -Force -Attributes $attributes
         if ($?) {
