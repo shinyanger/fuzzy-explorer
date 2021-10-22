@@ -361,8 +361,8 @@ function ListCommands {
     $fzfParams = ("--height=40%", "--nth=1", "--prompt=:", "--exact", "--ansi")
     $output = $displays | fzf $fzfDefaultParams $fzfParams
     if ($LASTEXITCODE -eq 0) {
-        $null = $output -match "^\[(?<commandId>\w+)\]"
-        $commandId = $Matches["commandId"]
+        $match = [regex]::Match($output, "^\[(?<commandId>\w+)\]")
+        $commandId = $match.Groups["commandId"].Value
     }
     return $commandId
 }
@@ -606,8 +606,8 @@ function ChangeSetting {
     if ($LASTEXITCODE -ne 0) {
         return
     }
-    $null = $output -match "^\[(?<entryId>\S+)\]"
-    $entryId = $Matches["entryId"]
+    $match = [regex]::Match($output, "^\[(?<entryId>\S+)\]")
+    $entryId = $match.Groups["entryId"].Value
     switch ($entryId) {
         { $PSItem.EndsWith("preview") } {
             $settings.preview = -not $PSItem.StartsWith("no")
@@ -622,8 +622,8 @@ function ChangeSetting {
             break
         }
         { $PSItem.StartsWith("sort") } {
-            $null = $PSItem -match "sort=(?<sortBy>\w+)"
-            $settings.sortBy = $Matches["sortBy"]
+            $match = [regex]::Match($PSItem, "sort=(?<sortBy>\w+)")
+            $settings.sortBy = $match.Groups["sortBy"].Value
             break
         }
         "all" {
