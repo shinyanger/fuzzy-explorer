@@ -23,10 +23,10 @@ function Preview {
         $attributes = GetDirAttributes
         $items = Get-ChildItem $selectedFile -Force -Attributes $attributes
         if ($?) {
-            if ($settings.showDetails) {
+            if ($s_settings.showDetails) {
                 $rows = GetDirHeader
                 foreach ($row in $rows) {
-                    FormatColor $row -FgColor $colors.header
+                    FormatColor $row -FgColor $s_colors.header
                 }
             }
             $items = SortDir $items
@@ -44,7 +44,7 @@ function Preview {
         }
     }
     else {
-        $lineFormat = (FormatColor "{0,4}" -FgColor $colors.lineNumber) + " {1}"
+        $lineFormat = (FormatColor "{0,4}" -FgColor $s_colors.lineNumber) + " {1}"
         $formatter = { [string]::Format($lineFormat, ($i + 1), $content[$i]) }
         if ($line) {
             $content = [List[string]][System.IO.File]::ReadAllLines($fileName)
@@ -54,7 +54,7 @@ function Preview {
                     & $formatter
                 }
             }
-            [string]::Format($lineFormat, $line, (FormatColor $content[$line - 1] -BgColor $colors.highlight))
+            [string]::Format($lineFormat, $line, (FormatColor $content[$line - 1] -BgColor $s_colors.highlight))
             if ($line -lt $count) {
                 for ($i = $line; $i -lt $count; $i++) {
                     & $formatter

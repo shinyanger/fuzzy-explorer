@@ -1,7 +1,7 @@
-$fgCode = "38;5;"
-$bgCode = "48;5;"
+$s_fgCode = "38;5;"
+$s_bgCode = "48;5;"
 
-$colors = [PSCustomObject]@{
+$s_colors = [PSCustomObject]@{
     shortcut = 203
     file = 48
     directory = 81
@@ -33,13 +33,13 @@ function FormatColor {
         [short]$BgColor = -1
     )
     if (($FgColor -ge 0) -and ($BgColor -ge 0)) {
-        [string]::Format("`e[{0}{1};{2}{3}m{4}`e[0m", $fgCode, $FgColor, $bgCode, $BgColor, $str)
+        [string]::Format("`e[{0}{1};{2}{3}m{4}`e[0m", $s_fgCode, $FgColor, $s_bgCode, $BgColor, $str)
     }
     elseif (($FgColor -ge 0)) {
-        [string]::Format("`e[{0}{1}m{2}`e[0m", $fgCode, $FgColor, $str)
+        [string]::Format("`e[{0}{1}m{2}`e[0m", $s_fgCode, $FgColor, $str)
     }
     elseif ($BgColor -ge 0) {
-        [string]::Format("`e[{0}{1}m{2}`e[0m", $bgCode, $BgColor, $str)
+        [string]::Format("`e[{0}{1}m{2}`e[0m", $s_bgCode, $BgColor, $str)
     }
     else {
         $str
@@ -57,7 +57,7 @@ function GetDirHeader {
 
 function GetDirAttributes {
     $attributes = "!System"
-    if (-not $settings.showHidden) {
+    if (-not $s_settings.showHidden) {
         $attributes = $attributes + "+!Hidden"
     }
     return $attributes
@@ -68,7 +68,7 @@ function GetDirRows {
         [List[System.IO.FileSystemInfo]]$items
     )
     if ($items) {
-        if ($settings.showDetails) {
+        if ($s_settings.showDetails) {
             $outStr = $items | Format-Table -HideTableHeaders | Out-String
             $fields = $outStr.TrimEnd().Split([System.Environment]::NewLine)
             $count = $fields.Count
@@ -88,13 +88,13 @@ function ColorizeRows {
     for ($i = 0; $i -lt $items.Count; $i++) {
         $item = $items[$i]
         if ($item.Attributes -band [System.IO.FileAttributes]::Hidden) {
-            $rowColor = $colors.hidden
+            $rowColor = $s_colors.hidden
         }
         elseif ($item.PSIsContainer) {
-            $rowColor = $colors.directory
+            $rowColor = $s_colors.directory
         }
         else {
-            $rowColor = $colors.file
+            $rowColor = $s_colors.file
         }
         FormatColor $rows[$i] -FgColor $rowColor
     }
@@ -104,7 +104,7 @@ function SortDir {
     param (
         [array]$items
     )
-    switch ($settings.sortBy) {
+    switch ($s_settings.sortBy) {
         "default" {
             $items
             break

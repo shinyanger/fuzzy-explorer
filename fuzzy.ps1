@@ -1,14 +1,14 @@
 using namespace System.Collections.Generic
 using namespace System.Text.Json
 
-$sharedFile = Join-Path -Path $PSScriptRoot -ChildPath "shared.ps1"
-. $sharedFile
+$s_sharedFile = Join-Path -Path $PSScriptRoot -ChildPath "shared.ps1"
+. $s_sharedFile
 
-$helperFile = Join-Path -Path $PSScriptRoot -ChildPath "helper.ps1"
-$settingsFile = Join-Path -Path $PSScriptRoot -ChildPath "settings.json"
-$extensionsFile = Join-Path -Path $PSScriptRoot -ChildPath "extensions.json"
-$bookmarkFile = Join-Path -Path $PSScriptRoot -ChildPath "bookmark.json"
-$fzfDefaultParams = ("--layout=reverse", "--border", "--info=inline")
+$s_helperFile = Join-Path -Path $PSScriptRoot -ChildPath "helper.ps1"
+$s_settingsFile = Join-Path -Path $PSScriptRoot -ChildPath "settings.json"
+$s_extensionsFile = Join-Path -Path $PSScriptRoot -ChildPath "extensions.json"
+$s_bookmarkFile = Join-Path -Path $PSScriptRoot -ChildPath "bookmark.json"
+$s_fzfDefaultParams = ("--layout=reverse", "--border", "--info=inline")
 
 enum ClipboardMode {
     None
@@ -106,7 +106,7 @@ function ListDirectory {
     }
     $entries = [List[DirEntry]]::new()
     & {
-        if ($settings.showDetails) {
+        if ($s_settings.showDetails) {
             $rows = GetDirHeader
             foreach ($row in $rows) {
                 $entries.Add([DirEntry]::new([string]::Empty, $row, $row))
@@ -115,7 +115,7 @@ function ListDirectory {
         & {
             $item = Get-Item . -Force
             $row = ".."
-            if ($settings.showDetails) {
+            if ($s_settings.showDetails) {
                 $outstr = $item | Format-Table -HideTableHeaders | Out-String
                 $fields = $outstr.Split([System.Environment]::NewLine)
                 $index = $fields[3].LastIndexOf($item.Name)
@@ -150,7 +150,7 @@ function ListDirectory {
         $expect += ",${internalShortcuts}"
         $externalShortcuts = & {
             $shortcuts = [List[string]]::new()
-            foreach ($command in $extensions.commands) {
+            foreach ($command in $s_extensions.commands) {
                 if ($command.shortcut) {
                     $shortcuts.Add($command.shortcut)
                 }
@@ -169,7 +169,7 @@ function ListDirectory {
         "--ansi",
         "--expect=${expect}"
     )
-    if ($settings.showDetails) {
+    if ($s_settings.showDetails) {
         $fzfParams.AddRange(
             [List[string]](
                 "--header-lines=2",
@@ -177,16 +177,16 @@ function ListDirectory {
                 "--delimiter=\s{2,}\d*\s"
             )
         )
-        if ($settings.preview) {
-            $fzfParams.Add("--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {3..}")
+        if ($s_settings.preview) {
+            $fzfParams.Add("--preview=pwsh -NoProfile -File ${s_helperFile} ${s_tempSettingsFile} preview {3..}")
         }
     }
     else {
-        if ($settings.preview) {
-            $fzfParams.Add("--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {}")
+        if ($s_settings.preview) {
+            $fzfParams.Add("--preview=pwsh -NoProfile -File ${s_helperFile} ${s_tempSettingsFile} preview {}")
         }
     }
-    $output = $entries.display | fzf $fzfDefaultParams $fzfParams
+    $output = $entries.display | fzf $s_fzfDefaultParams $fzfParams
     if ($LASTEXITCODE -eq 0) {
         if (-not $output[0]) {
             $output[0] = "enter"
@@ -278,13 +278,13 @@ function ListCommands {
         [Command]::new("rg", [List[string]]("grep", "search"), "search files contents", [string]::Empty),
         [Command]::new("jump", [List[string]]::new(), "go to path in bookmark", "ctrl-j")
     )
-    if ($register.bookmark.Contains($PWD.ToString())) {
+    if ($s_register.bookmark.Contains($PWD.ToString())) {
         $commands.Add([Command]::new("unmark", [List[string]]::new(), "remove current path in bookmark", [string]::Empty))
     }
     else {
         $commands.Add([Command]::new("mark", [List[string]]::new(), "add current path in bookmark", [string]::Empty))
     }
-    foreach ($command in $extensions.commands) {
+    foreach ($command in $s_extensions.commands) {
         if ($command.type.Equals("common")) {
             $commands.Add($command)
         }
@@ -302,7 +302,7 @@ function ListCommands {
             if ($env:EDITOR) {
                 $fileCommands.Add([FileCommand]::new("edit", [List[string]]::new(), "open '{0}' with editor", "ctrl-e", $false))
             }
-            foreach ($command in $extensions.commands) {
+            foreach ($command in $s_extensions.commands) {
                 if ($command.type.Equals("file")) {
                     $fileCommands.Add($command.Clone())
                 }
@@ -323,12 +323,12 @@ function ListCommands {
             }
         }
     }
-    if ($register.clipboard) {
-        if ($register.clipboard.Count -gt 1) {
-            $name = [string]::Format("<{0} files>", $register.clipboard.Count)
+    if ($s_register.clipboard) {
+        if ($s_register.clipboard.Count -gt 1) {
+            $name = [string]::Format("<{0} files>", $s_register.clipboard.Count)
         }
         else {
-            $name = $register.clipboard[0].FullName
+            $name = $s_register.clipboard[0].FullName
         }
         $commands.Add([Command]::new("paste", [List[string]]::new(), "paste '${name}' in current directory", [string]::Empty))
     }
@@ -346,13 +346,13 @@ function ListCommands {
         foreach ($id in $ids) {
             $display = [string]::Format("{0,-15} : {1}", "[${id}]", $command.description)
             if ($command.shortcut) {
-                $display += [string]::Format(" <{0}>", (FormatColor $command.shortcut -FgColor $colors.shortcut))
+                $display += [string]::Format(" <{0}>", (FormatColor $command.shortcut -FgColor $s_colors.shortcut))
             }
             $display
         }
     }
     $fzfParams = ("--height=40%", "--nth=1", "--prompt=:", "--exact", "--ansi")
-    $output = $displays | fzf $fzfDefaultParams $fzfParams
+    $output = $displays | fzf $s_fzfDefaultParams $fzfParams
     if ($LASTEXITCODE -eq 0) {
         $match = [regex]::Match($output, "^\[(?<commandId>\w+)\]")
         $commandId = $match.Groups["commandId"].Value
@@ -383,7 +383,7 @@ function ProcessCommand {
             break
         }
         { ([List[string]]("quit", "exit")).Contains($PSItem) } {
-            $script:continue = $false
+            $script:s_continue = $false
             break
         }
         "set" {
@@ -400,16 +400,16 @@ function ProcessCommand {
         }
         { ([List[string]]("fd", "find")).Contains($PSItem) } {
             $fzfParams = [List[string]]("--height=80%", "--prompt=:${PSItem} ")
-            if ($settings.preview) {
-                $fzfParams.Add("--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {}")
+            if ($s_settings.preview) {
+                $fzfParams.Add("--preview=pwsh -NoProfile -File ${s_helperFile} ${s_tempSettingsFile} preview {}")
             }
             if (IsProgramInstalled "fd") {
                 $fdParams = ("--color=always")
                 $fzfParams.Add("--ansi")
-                $output = fd $fdParams | fzf $fzfDefaultParams $fzfParams
+                $output = fd $fdParams | fzf $s_fzfDefaultParams $fzfParams
             }
             else {
-                $output = fzf $fzfDefaultParams $fzfParams
+                $output = fzf $s_fzfDefaultParams $fzfParams
             }
             if ($LASTEXITCODE -eq 0) {
                 if ($env:EDITOR) {
@@ -429,10 +429,10 @@ function ProcessCommand {
                 "--ansi",
                 "--phony"
             )
-            if ($settings.preview) {
+            if ($s_settings.preview) {
                 $fzfParams.AddRange(
                     [List[string]](
-                        "--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {1} {2}",
+                        "--preview=pwsh -NoProfile -File ${s_helperFile} ${s_tempSettingsFile} preview {1} {2}",
                         "--preview-window=+{2}-/2"
                     )
                 )
@@ -443,12 +443,12 @@ function ProcessCommand {
                 $reloadParams = $rgParams + "{q}"
                 $fzfParams.Add("--bind=change:reload:rg ${reloadParams}")
                 $initList = rg $initParams
-                $output = $initList | fzf $fzfDefaultParams $fzfParams
+                $output = $initList | fzf $s_fzfDefaultParams $fzfParams
             }
             else {
-                $fzfParams.Add("--bind=change:reload:pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} search {q}")
-                $initList = & $helperFile $tempSettingsFile search
-                $output = $initList | fzf $fzfDefaultParams $fzfParams
+                $fzfParams.Add("--bind=change:reload:pwsh -NoProfile -File ${s_helperFile} ${s_tempSettingsFile} search {q}")
+                $initList = & $s_helperFile $s_tempSettingsFile search
+                $output = $initList | fzf $s_fzfDefaultParams $fzfParams
             }
             if ($LASTEXITCODE -eq 0) {
                 $fields = $output.Split(":")
@@ -464,21 +464,21 @@ function ProcessCommand {
         }
         "jump" {
             $fzfParams = [List[string]]("--height=40%", "--prompt=:${PSItem} ")
-            if ($settings.preview) {
-                $fzfParams.Add("--preview=pwsh -NoProfile -File ${helperFile} ${tempSettingsFile} preview {}")
+            if ($s_settings.preview) {
+                $fzfParams.Add("--preview=pwsh -NoProfile -File ${s_helperFile} ${s_tempSettingsFile} preview {}")
             }
-            $location = $register.bookmark | fzf $fzfDefaultParams $fzfParams
+            $location = $s_register.bookmark | fzf $s_fzfDefaultParams $fzfParams
             if ($LASTEXITCODE -eq 0) {
                 Set-Location $location
             }
             break
         }
         "mark" {
-            $register.bookmark.Add($PWD.ToString())
+            $s_register.bookmark.Add($PWD.ToString())
             break
         }
         "unmark" {
-            $null = $register.bookmark.Remove($PWD.ToString())
+            $null = $s_register.bookmark.Remove($PWD.ToString())
             break
         }
         "edit" {
@@ -486,18 +486,18 @@ function ProcessCommand {
             break
         }
         { ([List[string]]("cp", "copy")).Contains($PSItem) } {
-            $register.clipboard = $selectedFiles
-            $register.clipMode = [ClipboardMode]::Copy
+            $s_register.clipboard = $selectedFiles
+            $s_register.clipMode = [ClipboardMode]::Copy
             break
         }
         { ([List[string]]("mv", "move", "cut")).Contains($PSItem) } {
-            $register.clipboard = $selectedFiles
-            $register.clipMode = [ClipboardMode]::Cut
+            $s_register.clipboard = $selectedFiles
+            $s_register.clipMode = [ClipboardMode]::Cut
             break
         }
         { ([List[string]]("ln", "link")).Contains($PSItem) } {
-            $register.clipboard = $selectedFiles
-            $register.clipMode = [ClipboardMode]::Link
+            $s_register.clipboard = $selectedFiles
+            $s_register.clipMode = [ClipboardMode]::Link
             break
         }
         { ([List[string]]("rm", "remove", "del")).Contains($PSItem) } {
@@ -521,23 +521,23 @@ function ProcessCommand {
             break
         }
         "paste" {
-            switch ($register.clipMode) {
+            switch ($s_register.clipMode) {
                 ([ClipboardMode]::Copy) {
-                    Copy-Item -Path $register.clipboard -Recurse
+                    Copy-Item -Path $s_register.clipboard -Recurse
                     break
                 }
                 ([ClipboardMode]::Cut) {
-                    Move-Item -Path $register.clipboard
-                    $register.clipboard = $null
-                    $register.clipMode = [ClipboardMode]::None
+                    Move-Item -Path $s_register.clipboard
+                    $s_register.clipboard = $null
+                    $s_register.clipMode = [ClipboardMode]::None
                     break
                 }
                 ([ClipboardMode]::Link) {
-                    foreach ($file in $register.clipboard) {
+                    foreach ($file in $s_register.clipboard) {
                         New-Item -ItemType SymbolicLink -Path $file.Name -Target $file.FullName
                     }
-                    $register.clipboard = $null
-                    $register.clipMode = [ClipboardMode]::None
+                    $s_register.clipboard = $null
+                    $s_register.clipMode = [ClipboardMode]::None
                     break
                 }
                 ([ClipboardMode]::None) {}
@@ -546,7 +546,7 @@ function ProcessCommand {
             break
         }
         Default {
-            $externalCommand = $extensions.commands.Find({ param($item) $item.id.Equals($commandId) -or $item.aliases.Contains($commandId) })
+            $externalCommand = $s_extensions.commands.Find({ param($item) $item.id.Equals($commandId) -or $item.aliases.Contains($commandId) })
             if ($externalCommand) {
                 if ($externalCommand.type.Equals("file")) {
                     foreach ($selectedFile in $selectedFiles) {
@@ -595,7 +595,7 @@ function ChangeSetting {
         [string]::Format("{0,-15} : {1}", "[$($entry.id)]", $entry.description)
     }
     $fzfParams = ("--height=40%", "--prompt=:${PSItem} ", "--exact")
-    $output = $displays | fzf $fzfDefaultParams $fzfParams
+    $output = $displays | fzf $s_fzfDefaultParams $fzfParams
     if ($LASTEXITCODE -ne 0) {
         return
     }
@@ -603,70 +603,70 @@ function ChangeSetting {
     $entryId = $match.Groups["entryId"].Value
     switch ($entryId) {
         { $PSItem.EndsWith("preview") } {
-            $settings.preview = -not $PSItem.StartsWith("no")
+            $s_settings.preview = -not $PSItem.StartsWith("no")
             break
         }
         { $PSItem.EndsWith("details") } {
-            $settings.showDetails = -not $PSItem.StartsWith("no")
+            $s_settings.showDetails = -not $PSItem.StartsWith("no")
             break
         }
         { $PSItem.EndsWith("hidden") } {
-            $settings.showHidden = -not $PSItem.StartsWith("no")
+            $s_settings.showHidden = -not $PSItem.StartsWith("no")
             break
         }
         { $PSItem.StartsWith("sort") } {
             $match = [regex]::Match($PSItem, "sort=(?<sortBy>\w+)")
-            $settings.sortBy = $match.Groups["sortBy"].Value
+            $s_settings.sortBy = $match.Groups["sortBy"].Value
             break
         }
         "all" {
-            & $env:EDITOR $settingsFile
+            & $env:EDITOR $s_settingsFile
             break
         }
         Default {}
     }
     & {
-        $content = [JsonSerializer]::Serialize($settings, [Settings])
-        [System.IO.File]::WriteAllLines($tempSettingsFile, $content)
+        $content = [JsonSerializer]::Serialize($s_settings, [Settings])
+        [System.IO.File]::WriteAllLines($s_tempSettingsFile, $content)
     }
 }
 
 function Initialize {
-    $script:register = [PSCustomObject]@{
+    $script:s_register = [PSCustomObject]@{
         clipboard = [List[System.IO.FileSystemInfo]]::new()
         clipMode  = [ClipboardMode]::None
         bookmark  = [List[string]]::new()
     }
-    if (Test-Path -Path $bookmarkFile) {
-        $content = [System.IO.File]::ReadAllLines($bookmarkFile)
-        $register.bookmark = [JsonSerializer]::Deserialize($content, [List[string]])
+    if (Test-Path -Path $s_bookmarkFile) {
+        $content = [System.IO.File]::ReadAllLines($s_bookmarkFile)
+        $s_register.bookmark = [JsonSerializer]::Deserialize($content, [List[string]])
     }
-    $script:settings = & {
-        $content = [System.IO.File]::ReadAllLines($settingsFile)
+    $script:s_settings = & {
+        $content = [System.IO.File]::ReadAllLines($s_settingsFile)
         [JsonSerializer]::Deserialize($content, [Settings])
     }
-    $script:extensions = & {
-        $content = [System.IO.File]::ReadAllLines($extensionsFile)
+    $script:s_extensions = & {
+        $content = [System.IO.File]::ReadAllLines($s_extensionsFile)
         [JsonSerializer]::Deserialize($content, [Extensions])
     }
-    $script:tempSettingsFile = New-TemporaryFile
-    Copy-Item -Path $settingsFile -Destination $tempSettingsFile -Force
-    $script:continue = $true
+    $script:s_tempSettingsFile = New-TemporaryFile
+    Copy-Item -Path $s_settingsFile -Destination $s_tempSettingsFile -Force
+    $script:s_continue = $true
 }
 
 function Finalize {
     & {
         $options = [JsonSerializerOptions]::new()
         $options.WriteIndented = $true
-        $content = [JsonSerializer]::Serialize($register.bookmark, [List[string]], $options)
-        [System.IO.File]::WriteAllLines($bookmarkFile, $content)
+        $content = [JsonSerializer]::Serialize($s_register.bookmark, [List[string]], $options)
+        [System.IO.File]::WriteAllLines($s_bookmarkFile, $content)
     }
-    Remove-Item -Path $tempSettingsFile -Force
+    Remove-Item -Path $s_tempSettingsFile -Force
 }
 
 function FuzzyExplorer {
     Initialize
-    while ($continue) {
+    while ($s_continue) {
         $result = ListDirectory
         $operation = $result.operation
         $selectedFiles = $result.selectedFiles
