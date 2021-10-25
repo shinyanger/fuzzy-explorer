@@ -16,8 +16,8 @@ function Preview {
         $selectedFile = Get-Item $fileName -Force
     }
     if ($selectedFile.PSIsContainer) {
-        $script:settings = & {
-            $content = [System.IO.File]::ReadAllLines($tempSettingsFile)
+        $script:s_settings = & {
+            $content = [System.IO.File]::ReadAllLines($s_tempSettingsFile)
             [JsonSerializer]::Deserialize($content, [Settings])
         }
         $attributes = GetDirAttributes
@@ -78,7 +78,7 @@ function Preview {
 }
 
 function FuzzyHelper {
-    $script:tempSettingsFile = $args[0]
+    $script:s_tempSettingsFile = $args[0]
     switch ($args[1]) {
         "preview" {
             $fileName = $args[2]

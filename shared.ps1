@@ -28,21 +28,21 @@ function IsProgramInstalled {
 
 function FormatColor {
     param (
-        [string]$str,
+        [string]$content,
         [short]$FgColor = -1,
         [short]$BgColor = -1
     )
     if (($FgColor -ge 0) -and ($BgColor -ge 0)) {
-        [string]::Format("`e[{0}{1};{2}{3}m{4}`e[0m", $s_fgCode, $FgColor, $s_bgCode, $BgColor, $str)
+        return [string]::Format("`e[{0}{1};{2}{3}m{4}`e[0m", $s_fgCode, $FgColor, $s_bgCode, $BgColor, $content)
     }
     elseif (($FgColor -ge 0)) {
-        [string]::Format("`e[{0}{1}m{2}`e[0m", $s_fgCode, $FgColor, $str)
+        return [string]::Format("`e[{0}{1}m{2}`e[0m", $s_fgCode, $FgColor, $content)
     }
     elseif ($BgColor -ge 0) {
-        [string]::Format("`e[{0}{1}m{2}`e[0m", $s_bgCode, $BgColor, $str)
+        return [string]::Format("`e[{0}{1}m{2}`e[0m", $s_bgCode, $BgColor, $content)
     }
     else {
-        $str
+        return $content
     }
 }
 
@@ -72,10 +72,10 @@ function GetDirRows {
             $outStr = $items | Format-Table -HideTableHeaders | Out-String
             $fields = $outStr.TrimEnd().Split([System.Environment]::NewLine)
             $count = $fields.Count
-            $fields[3..($count - 1)]
+            return $fields[3..($count - 1)]
         }
         else {
-            $items.Name
+            return $items.Name
         }
     }
 }
@@ -102,7 +102,7 @@ function ColorizeRows {
 
 function SortDir {
     param (
-        [array]$items
+        [List[System.IO.FileSystemInfo]]$items
     )
     switch ($s_settings.sortBy) {
         "default" {
