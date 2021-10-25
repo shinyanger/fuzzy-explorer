@@ -509,7 +509,7 @@ function ProcessCommand {
                 $baseName = $selectedFile.BaseName
                 $destinationName = [string]::Format("{0} copy{1}", $baseName, $selectedFile.Extension)
                 $index = 1
-                while (Test-Path -Path (Join-Path -Path $PWD -ChildPath $destinationName)) {
+                while ([System.IO.File]::Exists((Join-Path -Path $PWD -ChildPath $destinationName))) {
                     $destinationName = [string]::Format("{0} copy {1}{2}", $baseName, ++$index, $selectedFile.Extension)
                 }
                 Copy-Item -Path $selectedFile -Destination $destinationName
@@ -633,7 +633,7 @@ function Initialize {
         clipMode  = [ClipboardMode]::None
         bookmark  = [List[string]]::new()
     }
-    if (Test-Path -Path $s_bookmarkFile) {
+    if ([System.IO.File]::Exists($s_bookmarkFile)) {
         $content = [System.IO.File]::ReadAllLines($s_bookmarkFile)
         $s_register.bookmark = [JsonSerializer]::Deserialize($content, [List[string]])
     }
