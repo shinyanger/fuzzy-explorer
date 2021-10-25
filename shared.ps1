@@ -47,9 +47,12 @@ function FormatColor {
 }
 
 function GetDirHeader {
-    $outStr = Get-Item ~ | Out-String
-    $fields = $outStr.Split([System.Environment]::NewLine)
-    $fields[3..4]
+    if (-not $s_dirHeader) {
+        $outStr = Get-Item ~ | Out-String
+        $fields = $outStr.Split([System.Environment]::NewLine)
+        $script:s_dirHeader = $fields[3..4]
+    }
+    return $s_dirHeader
 }
 
 function GetDirAttributes {
