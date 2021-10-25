@@ -145,22 +145,15 @@ function ListDirectory {
         $location
     }
     $expect = & {
-        $expect = "left,right,:,f5"
-        $internalShortcuts = "ctrl-q,ctrl-e,ctrl-p,ctrl-j,del,f1,f2"
-        $expect += ",${internalShortcuts}"
-        $externalShortcuts = & {
-            $shortcuts = [List[string]]::new()
-            foreach ($command in $s_extensions.commands) {
-                if ($command.shortcut) {
-                    $shortcuts.Add($command.shortcut)
-                }
+        $expect = [List[string]]("left", "right", ":", "f5")
+        $shortcuts = [List[string]]("ctrl-q", "ctrl-e", "ctrl-p", "ctrl-j", "del", "f1", "f2")
+        $expect.AddRange($shortcuts)
+        foreach ($command in $s_extensions.commands) {
+            if ($command.shortcut) {
+                $expect.Add($command.shortcut)
             }
-            [string]::Join(',', $shortcuts)
         }
-        if ($externalShortcuts) {
-            $expect += ",${externalShortcuts}"
-        }
-        $expect
+        [string]::Join(',', $expect)
     }
     $fzfParams = [List[string]](
         "--height=80%",
