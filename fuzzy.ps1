@@ -261,16 +261,19 @@ function ListCommands {
         [string]$shortcut,
         [List[System.IO.FileSystemInfo]]$selectedFiles
     )
-    $commands = [List[Command]](
-        [Command]::new("help", [List[string]]::new(), "print help", "f1"),
-        [Command]::new("quit", [List[string]]("exit"), "quit explorer", "ctrl-q"),
-        [Command]::new("set", [List[string]]::new(), "change setting", [string]::Empty),
-        [Command]::new("new", [List[string]]("touch"), "create new file", [string]::Empty),
-        [Command]::new("mkdir", [List[string]]::new(), "create new directory", [string]::Empty),
-        [Command]::new("fd", [List[string]]("find"), "find file/directory", "ctrl-p"),
-        [Command]::new("rg", [List[string]]("grep", "search"), "search files contents", [string]::Empty),
-        [Command]::new("jump", [List[string]]::new(), "go to path in bookmark", "ctrl-j")
-    )
+    if (-not $s_commands) {
+        $script:s_commands = [List[Command]](
+            [Command]::new("help", [List[string]]::new(), "print help", "f1"),
+            [Command]::new("quit", [List[string]]("exit"), "quit explorer", "ctrl-q"),
+            [Command]::new("set", [List[string]]::new(), "change setting", [string]::Empty),
+            [Command]::new("new", [List[string]]("touch"), "create new file", [string]::Empty),
+            [Command]::new("mkdir", [List[string]]::new(), "create new directory", [string]::Empty),
+            [Command]::new("fd", [List[string]]("find"), "find file/directory", "ctrl-p"),
+            [Command]::new("rg", [List[string]]("grep", "search"), "search files contents", [string]::Empty),
+            [Command]::new("jump", [List[string]]::new(), "go to path in bookmark", "ctrl-j")
+        )
+    }
+    $commands = [List[Command]]::new($s_commands)
     if ($s_register.bookmark.Contains($PWD.ToString())) {
         $commands.Add([Command]::new("unmark", [List[string]]::new(), "remove current path in bookmark", [string]::Empty))
     }
