@@ -451,7 +451,7 @@ function ProcessCommand {
                 $output = $initList | fzf $s_fzfDefaultParams $fzfParams
             }
             if ($LASTEXITCODE -eq 0) {
-                $fields = $output.Split(":")
+                $fields = $output.Split(':')
                 $fileName = $fields[0]
                 if ($env:EDITOR) {
                     & $env:EDITOR $fileName
