@@ -1,7 +1,7 @@
 using namespace System.Collections.Generic
 using namespace System.Text.Json
 
-$s_sharedFile = Join-Path -Path $PSScriptRoot -ChildPath "shared.ps1"
+$s_sharedFile = [System.IO.Path]::Join($PSScriptRoot, "shared.ps1")
 . $s_sharedFile
 
 function Preview {

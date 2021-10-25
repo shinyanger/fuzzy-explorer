@@ -1,13 +1,13 @@
 using namespace System.Collections.Generic
 using namespace System.Text.Json
 
-$s_sharedFile = Join-Path -Path $PSScriptRoot -ChildPath "shared.ps1"
+$s_sharedFile = [System.IO.Path]::Join($PSScriptRoot, "shared.ps1")
 . $s_sharedFile
 
-$s_helperFile = Join-Path -Path $PSScriptRoot -ChildPath "helper.ps1"
-$s_settingsFile = Join-Path -Path $PSScriptRoot -ChildPath "settings.json"
-$s_extensionsFile = Join-Path -Path $PSScriptRoot -ChildPath "extensions.json"
-$s_bookmarkFile = Join-Path -Path $PSScriptRoot -ChildPath "bookmark.json"
+$s_helperFile = [System.IO.Path]::Join($PSScriptRoot, "helper.ps1")
+$s_settingsFile = [System.IO.Path]::Join($PSScriptRoot, "settings.json")
+$s_extensionsFile = [System.IO.Path]::Join($PSScriptRoot, "extensions.json")
+$s_bookmarkFile = [System.IO.Path]::Join($PSScriptRoot, "bookmark.json")
 $s_fzfDefaultParams = ("--layout=reverse", "--border", "--info=inline")
 
 enum ClipboardMode {
@@ -509,7 +509,7 @@ function ProcessCommand {
                 $baseName = $selectedFile.BaseName
                 $destinationName = [string]::Format("{0} copy{1}", $baseName, $selectedFile.Extension)
                 $index = 1
-                while ([System.IO.File]::Exists((Join-Path -Path $PWD -ChildPath $destinationName))) {
+                while ([System.IO.File]::Exists([System.IO.Path]::Join($PWD, $destinationName))) {
                     $destinationName = [string]::Format("{0} copy {1}{2}", $baseName, ++$index, $selectedFile.Extension)
                 }
                 Copy-Item -Path $selectedFile -Destination $destinationName
