@@ -647,7 +647,7 @@ function Initialize {
         $content = [System.IO.File]::ReadAllLines($s_extensionsFile)
         [JsonSerializer]::Deserialize($content, [Extensions])
     }
-    $script:s_tempSettingsFile = New-TemporaryFile
+    $script:s_tempSettingsFile = (New-TemporaryFile).FullName
     Copy-Item -Path $s_settingsFile -Destination $s_tempSettingsFile -Force
     $script:s_continue = $true
 }
