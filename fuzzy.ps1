@@ -181,7 +181,7 @@ function ListDirectory {
     }
     $output = $entries.display | fzf $s_fzfDefaultParams $fzfParams
     if ($LASTEXITCODE -eq 0) {
-        if (-not $output[0]) {
+        if ([string]::IsNullOrEmpty($output[0])) {
             $output[0] = "enter"
         }
         $result.operation = $output[0]
