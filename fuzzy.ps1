@@ -333,7 +333,8 @@ function ListCommands {
         }
         return $commandId
     }
-    $displays = foreach ($command in $commands) {
+    $displays = [List[string]]::new()
+    foreach ($command in $commands) {
         $ids = [List[string]]::new()
         $ids.Add($command.id)
         $ids.AddRange($command.aliases)
@@ -342,7 +343,7 @@ function ListCommands {
             if ($command.shortcut) {
                 $display += [string]::Format(" <{0}>", (FormatColor $command.shortcut -FgColor $s_colors.shortcut))
             }
-            $display
+            $displays.Add($display)
         }
     }
     $fzfParams = ("--height=40%", "--nth=1", "--prompt=:", "--exact", "--ansi")
@@ -529,8 +530,8 @@ function ProcessCommand {
                     break
                 }
                 ([ClipboardMode]::Link) {
-                    foreach ($file in $s_register.clipboard) {
-                        New-Item -ItemType SymbolicLink -Path $file.Name -Target $file.FullName
+                    foreach ($item in $s_register.clipboard) {
+                        New-Item -ItemType SymbolicLink -Path $item.Name -Target $item.FullName
                     }
                     $s_register.clipboard = $null
                     $s_register.clipMode = [ClipboardMode]::None
@@ -587,8 +588,9 @@ function ChangeSetting {
         }
         $entries
     }
-    $displays = foreach ($entry in $entries) {
-        [string]::Format("{0,-15} : {1}", "[$($entry.id)]", $entry.description)
+    $displays = [List[string]]::new()
+    foreach ($entry in $entries) {
+        $displays.Add([string]::Format("{0,-15} : {1}", "[$($entry.id)]", $entry.description))
     }
     $fzfParams = ("--height=40%", "--prompt=:${PSItem} ", "--exact")
     $output = $displays | fzf $s_fzfDefaultParams $fzfParams

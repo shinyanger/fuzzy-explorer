@@ -67,7 +67,7 @@ function GetDirRows {
     param (
         [List[System.IO.FileSystemInfo]]$items
     )
-    if ($items) {
+    if ($items.Count -gt 0) {
         if ($s_settings.showDetails) {
             $outStr = $items | Format-Table -HideTableHeaders | Out-String
             $fields = $outStr.TrimEnd().Split([System.Environment]::NewLine)
