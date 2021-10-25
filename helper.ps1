@@ -1,13 +1,13 @@
 using namespace System.Collections.Generic
 using namespace System.Text.Json
 
-$sharedFile = Join-Path -Path $PSScriptRoot -ChildPath "shared.ps1"
-. $sharedFile
+$s_sharedFile = Join-Path -Path $PSScriptRoot -ChildPath "shared.ps1"
+. $s_sharedFile
 
 function Preview {
     param (
         [string]$fileName,
-        [int]$line
+        [int]$lineNumber
     )
     $selectedFile = Get-Item $fileName -Force -ErrorAction SilentlyContinue
     if (-not $?) {
@@ -36,8 +36,8 @@ function Preview {
     }
     elseif (IsProgramInstalled "bat") {
         $batParams = ("--style=numbers", "--color=always")
-        if ($line) {
-            bat $batParams --highlight-line $line $fileName
+        if ($lineNumber) {
+            bat $batParams --highlight-line $lineNumber $fileName
         }
         else {
             bat $batParams --line-range :100 $fileName
@@ -46,17 +46,17 @@ function Preview {
     else {
         $lineFormat = (FormatColor "{0,4}" -FgColor $s_colors.lineNumber) + " {1}"
         $formatter = { [string]::Format($lineFormat, ($i + 1), $content[$i]) }
-        if ($line) {
+        if ($lineNumber) {
             $content = [List[string]][System.IO.File]::ReadAllLines($fileName)
             $count = $content.Count
-            if ($line -gt 1) {
-                for ($i = 0; $i -lt $line - 1; $i++) {
+            if ($lineNumber -gt 1) {
+                for ($i = 0; $i -lt $lineNumber - 1; $i++) {
                     & $formatter
                 }
             }
-            [string]::Format($lineFormat, $line, (FormatColor $content[$line - 1] -BgColor $s_colors.highlight))
-            if ($line -lt $count) {
-                for ($i = $line; $i -lt $count; $i++) {
+            [string]::Format($lineFormat, $lineNumber, (FormatColor $content[$lineNumber - 1] -BgColor $s_colors.highlight))
+            if ($lineNumber -lt $count) {
+                for ($i = $lineNumber; $i -lt $count; $i++) {
                     & $formatter
                 }
             }
@@ -82,11 +82,11 @@ function FuzzyHelper {
     switch ($args[1]) {
         "preview" {
             $fileName = $args[2]
-            $line = 0
+            $lineNumber = 0
             if ($args.Count -gt 3) {
-                $line = $args[3]
+                $lineNumber = $args[3]
             }
-            Preview $fileName $line
+            Preview $fileName $lineNumber
             break
         }
         "search" {
