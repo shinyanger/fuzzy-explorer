@@ -334,7 +334,8 @@ function ListCommands {
         return $commandId
     }
     $displays = foreach ($command in $commands) {
-        $ids = [List[string]]($command.id)
+        $ids = [List[string]]::new()
+        $ids.Add($command.id)
         $ids.AddRange($command.aliases)
         foreach ($id in $ids) {
             $display = [string]::Format("{0,-15} : {1}", "[${id}]", $command.description)
@@ -431,9 +432,11 @@ function ProcessCommand {
                 )
             }
             if (IsProgramInstalled "rg") {
-                $rgParams = ("--line-number", "--no-heading", "--color=always", "--smart-case")
-                $initParams = $rgParams + '""'
-                $reloadParams = $rgParams + "{q}"
+                $rgParams = [List[string]]("--line-number", "--no-heading", "--color=always", "--smart-case")
+                $initParams = [List[string]]::new($rgParams)
+                $initParams.Add('""')
+                $reloadParams = [List[string]]::new($rgParams)
+                $reloadParams.Add("{q}")
                 $fzfParams.Add("--bind=change:reload:rg ${reloadParams}")
                 $initList = rg $initParams
                 $output = $initList | fzf $s_fzfDefaultParams $fzfParams
