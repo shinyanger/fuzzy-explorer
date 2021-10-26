@@ -548,17 +548,15 @@ function ProcessCommand {
         }
         Default {
             $command = $s_extensions.commands.Find({ param($item) $item.id.Equals($commandId) -or $item.aliases.Contains($commandId) })
-            if ($command) {
-                if ($command.type.Equals("file")) {
-                    foreach ($selectedFile in $selectedFiles) {
-                        $expression = [string]::Format($command.expression, $selectedFile.Name)
-                        Invoke-Expression $expression
-                    }
-                }
-                else {
-                    $expression = $command.expression
+            if ($command.type.Equals("file")) {
+                foreach ($selectedFile in $selectedFiles) {
+                    $expression = [string]::Format($command.expression, $selectedFile.Name)
                     Invoke-Expression $expression
                 }
+            }
+            else {
+                $expression = $command.expression
+                Invoke-Expression $expression
             }
         }
     }
