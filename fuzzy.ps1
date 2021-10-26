@@ -75,15 +75,12 @@ class Extensions {
 class DirEntry {
     [string]$name
     [string]$details
-    [string]$display
     DirEntry(
         [string]$name,
-        [string]$details,
-        [string]$display
+        [string]$details
     ) {
         $this.name = $name
         $this.details = $details
-        $this.display = $display
     }
 }
 
@@ -105,12 +102,14 @@ function ListDirectory {
         selectedFiles = [List[System.IO.FileSystemInfo]]::new()
     }
     $entries = [List[DirEntry]]::new()
+    $displays = [List[string]]::new()
     & {
         if ($s_settings.showDetails) {
-            $rows = GetDirHeader
+            $rows = [List[string]](GetDirHeader)
             foreach ($row in $rows) {
-                $entries.Add([DirEntry]::new([string]::Empty, $row, $row))
+                $entries.Add([DirEntry]::new([string]::Empty, $row))
             }
+            $displays.AddRange($rows)
         }
         & {
             $item = Get-Item . -Force
@@ -121,8 +120,9 @@ function ListDirectory {
                 $index = $fields[3].LastIndexOf($item.Name)
                 $row = $fields[3].Substring(0, $index) + ".."
             }
-            $display = ColorizeRows $item $row
-            $entries.Add([DirEntry]::new("..", $row, $display))
+            $entries.Add([DirEntry]::new("..", $row))
+            $row = ColorizeRows $item $row
+            $displays.Add($row)
         }
         $items = & {
             $attributes = GetDirAttributes
@@ -130,10 +130,11 @@ function ListDirectory {
             SortDir $items
         }
         $rows = [List[string]](GetDirRows $items)
-        $displays = [List[string]](ColorizeRows $items $rows)
         for ($i = 0; $i -lt $items.Count; $i++) {
-            $entries.Add([DirEntry]::new($items[$i].Name, $rows[$i], $displays[$i]))
+            $entries.Add([DirEntry]::new($items[$i].Name, $rows[$i]))
         }
+        $rows = [List[string]](ColorizeRows $items $rows)
+        $displays.AddRange($rows)
     }
     $location = & {
         $location = $PWD.ToString()
@@ -179,7 +180,7 @@ function ListDirectory {
             $fzfParams.Add("--preview=pwsh -NoProfile -File ${s_helperFile} ${s_tempSettingsFile} preview {}")
         }
     }
-    $output = $entries.display | fzf $s_fzfDefaultParams $fzfParams
+    $output = $displays | fzf $s_fzfDefaultParams $fzfParams
     if ($LASTEXITCODE -eq 0) {
         if ([string]::IsNullOrEmpty($output[0])) {
             $output[0] = "enter"
