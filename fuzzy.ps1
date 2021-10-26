@@ -320,7 +320,7 @@ function ListCommands {
             }
         }
     }
-    if ($s_register.clipboard) {
+    if ($s_register.clipboard.Count -gt 0) {
         if ($s_register.clipboard.Count -gt 1) {
             $name = [string]::Format("<{0} files>", $s_register.clipboard.Count)
         }
@@ -529,7 +529,7 @@ function ProcessCommand {
                 }
                 ([ClipboardMode]::Cut) {
                     Move-Item -Path $s_register.clipboard
-                    $s_register.clipboard = $null
+                    $s_register.clipboard.Clear()
                     $s_register.clipMode = [ClipboardMode]::None
                     break
                 }
@@ -537,7 +537,7 @@ function ProcessCommand {
                     foreach ($item in $s_register.clipboard) {
                         New-Item -ItemType SymbolicLink -Path $item.Name -Target $item.FullName
                     }
-                    $s_register.clipboard = $null
+                    $s_register.clipboard.Clear()
                     $s_register.clipMode = [ClipboardMode]::None
                     break
                 }
