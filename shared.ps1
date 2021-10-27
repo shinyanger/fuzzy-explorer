@@ -85,6 +85,7 @@ function ColorizeRows {
         [List[System.IO.FileSystemInfo]]$items,
         [List[string]]$rows
     )
+    $result = [List[string]]::new()
     for ($i = 0; $i -lt $items.Count; $i++) {
         $item = $items[$i]
         if ($item.Attributes -band [System.IO.FileAttributes]::Hidden) {
@@ -96,8 +97,10 @@ function ColorizeRows {
         else {
             $rowColor = $s_colors.file
         }
-        FormatColor $rows[$i] -FgColor $rowColor
+        $row = FormatColor $rows[$i] -FgColor $rowColor
+        $result.Add($row)
     }
+    return $result
 }
 
 function SortDir {
@@ -106,33 +109,33 @@ function SortDir {
     )
     switch ($s_settings.sortBy) {
         "default" {
-            $items
             break
         }
         "nameasc" {
-            $items | Sort-Object -Property Name
+            $items = $items | Sort-Object -Property Name
             break
         }
         "namedesc" {
-            $items | Sort-Object -Property Name -Descending
+            $items = $items | Sort-Object -Property Name -Descending
             break
         }
         "sizeasc" {
-            $items | Sort-Object -Property Length
+            $items = $items | Sort-Object -Property Length
             break
         }
         "sizedesc" {
-            $items | Sort-Object -Property Length -Descending
+            $items = $items | Sort-Object -Property Length -Descending
             break
         }
         "timeasc" {
-            $items | Sort-Object -Property LastWriteTime
+            $items = $items | Sort-Object -Property LastWriteTime
             break
         }
         "timedesc" {
-            $items | Sort-Object -Property LastWriteTime -Descending
+            $items = $items | Sort-Object -Property LastWriteTime -Descending
             break
         }
         Default {}
     }
+    return $items
 }
