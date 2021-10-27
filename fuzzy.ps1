@@ -72,18 +72,6 @@ class Extensions {
     [List[ExternalCommand]]$commands
 }
 
-class DirEntry {
-    [string]$name
-    [string]$details
-    DirEntry(
-        [string]$name,
-        [string]$details
-    ) {
-        $this.name = $name
-        $this.details = $details
-    }
-}
-
 class SettingEntry {
     [string]$id
     [string]$description
@@ -101,13 +89,13 @@ function ListDirectory {
         operation     = [string]::Empty
         selectedFiles = [List[System.IO.FileSystemInfo]]::new()
     }
-    $entries = [List[DirEntry]]::new()
+    $entries = [Dictionary[string, string]]::new()
     $displays = [List[string]]::new()
     & {
         if ($s_settings.showDetails) {
             $rows = [List[string]](GetDirHeader)
             foreach ($row in $rows) {
-                $entries.Add([DirEntry]::new([string]::Empty, $row))
+                $entries[$row] = [string]::Empty
             }
             $displays.AddRange($rows)
         }
@@ -120,7 +108,7 @@ function ListDirectory {
                 $index = $fields[3].LastIndexOf($item.Name)
                 $row = $fields[3].Substring(0, $index) + ".."
             }
-            $entries.Add([DirEntry]::new("..", $row))
+            $entries[$row] = ".."
             $row = ColorizeRows $item $row
             $displays.Add($row)
         }
@@ -131,7 +119,7 @@ function ListDirectory {
         }
         $rows = [List[string]](GetDirRows $items)
         for ($i = 0; $i -lt $items.Count; $i++) {
-            $entries.Add([DirEntry]::new($items[$i].Name, $rows[$i]))
+            $entries[$rows[$i]] = $items[$i].Name
         }
         $rows = [List[string]](ColorizeRows $items $rows)
         $displays.AddRange($rows)
@@ -187,9 +175,9 @@ function ListDirectory {
         }
         $result.operation = $output[0]
         for ($i = 1; $i -lt $output.Count; $i++) {
-            $entry = $entries.Find({ param($item) $item.details.Equals($output[$i]) })
-            if ((-not $entry.name.Equals("..")) -or ([List[string]]("enter", "right")).Contains($output[0])) {
-                $item = Get-Item $entry.name -Force
+            $fileName = $entries[$output[$i]]
+            if ((-not $fileName.Equals("..")) -or ([List[string]]("enter", "right")).Contains($result.operation)) {
+                $item = Get-Item $fileName -Force
                 $result.selectedFiles.Add($item)
             }
         }
