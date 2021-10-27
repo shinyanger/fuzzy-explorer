@@ -46,19 +46,19 @@
             "type": "file",
             "description": "print '{0}' on console",
             "multiSupport": true,
-            "expression": "Write-Output {0}"
+            "expression": "Write-Output \"{0}\""
         },
         {
             "id": "vi",
             "type": "file",
             "description": "open '{0}' with vi",
-            "expression": "vi {0}"
+            "expression": "vi \"{0}\""
         },
         {
             "id": "code",
             "type": "file",
             "description": "open '{0}' with code",
-            "expression": "code --new-window {0}"
+            "expression": "code --new-window \"{0}\""
         }
     ]
 }
