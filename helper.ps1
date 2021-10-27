@@ -9,12 +9,11 @@ function Preview {
         [string]$fileName,
         [int]$lineNumber
     )
-    $selectedFile = Get-Item $fileName -Force -ErrorAction SilentlyContinue
-    if (-not $?) {
-        $fileNames = $fileName.Split(" -> ")
-        $fileName = $fileNames[0]
-        $selectedFile = Get-Item $fileName -Force
+    if ($fileName.Contains(" -> ")) {
+        $fields = $fileName.Split(" -> ")
+        $fileName = $fields[0]
     }
+    $selectedFile = Get-Item $fileName -Force
     if ($selectedFile.PSIsContainer) {
         $script:s_settings = & {
             $content = [System.IO.File]::ReadAllLines($s_tempSettingsFile)
