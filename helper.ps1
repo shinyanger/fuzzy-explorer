@@ -46,7 +46,7 @@ function Preview {
         $lineFormat = (FormatColor "{0,4}" -FgColor $s_colors.lineNumber) + " {1}"
         $formatter = { [string]::Format($lineFormat, ($i + 1), $content[$i]) }
         if ($lineNumber) {
-            $content = [List[string]][System.IO.File]::ReadAllLines($fileName)
+            $content = [System.IO.File]::ReadAllLines($fileName)
             $count = $content.Count
             if ($lineNumber -gt 1) {
                 for ($i = 0; $i -lt $lineNumber - 1; $i++) {
