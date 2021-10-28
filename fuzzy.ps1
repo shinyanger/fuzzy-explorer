@@ -431,13 +431,11 @@ function ProcessCommand {
                 $reloadParams = [List[string]]::new($rgParams)
                 $reloadParams.Add("{q}")
                 $fzfParams.Add("--bind=change:reload:rg ${reloadParams}")
-                $initList = rg $initParams
-                $output = $initList | fzf $s_fzfDefaultParams $fzfParams
+                $output = rg $initParams | fzf $s_fzfDefaultParams $fzfParams
             }
             else {
                 $fzfParams.Add("--bind=change:reload:pwsh -NoProfile -File ${s_helperFile} ${s_tempSettingsFile} search {q}")
-                $initList = & $s_helperFile $s_tempSettingsFile search
-                $output = $initList | fzf $s_fzfDefaultParams $fzfParams
+                $output = & $s_helperFile $s_tempSettingsFile search | fzf $s_fzfDefaultParams $fzfParams
             }
             if ($LASTEXITCODE -eq 0) {
                 $fields = $output.Split(':')
