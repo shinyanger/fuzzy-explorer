@@ -122,7 +122,9 @@ function ListDirectory {
             $entries[$rows[$i]] = $items[$i].Name
         }
         $rows = [List[string]](ColorizeRows $items $rows)
-        $displays.AddRange($rows)
+        if ($rows.Count -gt 0) {
+            $displays.AddRange($rows)
+        }
     }
     $location = & {
         $location = $PWD.ToString()

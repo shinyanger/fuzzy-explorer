@@ -19,6 +19,7 @@ class Settings {
 }
 
 function IsProgramInstalled {
+    [OutputType([bool])]
     param (
         [string]$program
     )
@@ -27,6 +28,7 @@ function IsProgramInstalled {
 }
 
 function FormatColor {
+    [OutputType([string])]
     param (
         [string]$content,
         [short]$FgColor = -1,
@@ -47,6 +49,8 @@ function FormatColor {
 }
 
 function GetDirHeader {
+    [OutputType([List[string]])]
+    param ()
     if (-not $s_dirHeader) {
         $outStr = Get-Item ~ | Out-String
         $fields = $outStr.Split([System.Environment]::NewLine)
@@ -56,6 +60,7 @@ function GetDirHeader {
 }
 
 function GetDirAttributes {
+    [OutputType([string])]
     $attributes = "!System"
     if (-not $s_settings.showHidden) {
         $attributes = $attributes + "+!Hidden"
@@ -64,6 +69,7 @@ function GetDirAttributes {
 }
 
 function GetDirRows {
+    [OutputType([List[string]])]
     param (
         [List[System.IO.FileSystemInfo]]$items
     )
@@ -81,6 +87,7 @@ function GetDirRows {
 }
 
 function ColorizeRows {
+    [OutputType([List[string]])]
     param (
         [List[System.IO.FileSystemInfo]]$items,
         [List[string]]$rows
@@ -104,6 +111,7 @@ function ColorizeRows {
 }
 
 function SortDir {
+    [OutputType([List[System.IO.FileSystemInfo]])]
     param (
         [List[System.IO.FileSystemInfo]]$items
     )
