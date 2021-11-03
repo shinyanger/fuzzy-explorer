@@ -15,6 +15,7 @@ class Settings {
     [bool]$preview
     [bool]$showDetails
     [bool]$showHidden
+    [bool]$cyclic
     [string]$sortBy
 }
 

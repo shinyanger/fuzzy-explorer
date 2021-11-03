@@ -170,6 +170,9 @@ function ListDirectory {
             $fzfParams.Add("--preview=pwsh -NoProfile -File ${s_helperFile} ${s_tempSettingsFile} preview {}")
         }
     }
+    if ($s_settings.cyclic) {
+        $fzfParams.Add("--cycle")
+    }
     $output = $displays | fzf $s_fzfDefaultParams $fzfParams
     if ($LASTEXITCODE -eq 0) {
         if ([string]::IsNullOrEmpty($output[0])) {
@@ -341,6 +344,9 @@ function ListCommands {
         }
     }
     $fzfParams = ("--height=40%", "--nth=1", "--prompt=:", "--exact", "--ansi")
+    if ($s_settings.cyclic) {
+        $fzfParams.Add("--cycle")
+    }
     $output = $displays | fzf $s_fzfDefaultParams $fzfParams
     if ($LASTEXITCODE -eq 0) {
         $match = [regex]::Match($output, "^\[(?<commandId>\w+)\]")
@@ -392,6 +398,9 @@ function ProcessCommand {
             if ($s_settings.preview) {
                 $fzfParams.Add("--preview=pwsh -NoProfile -File ${s_helperFile} ${s_tempSettingsFile} preview {}")
             }
+            if ($s_settings.cyclic) {
+                $fzfParams.Add("--cycle")
+            }
             if (IsProgramInstalled "fd") {
                 $fdParams = ("--color=always")
                 $fzfParams.Add("--ansi")
@@ -426,6 +435,9 @@ function ProcessCommand {
                     )
                 )
             }
+            if ($s_settings.cyclic) {
+                $fzfParams.Add("--cycle")
+            }
             if (IsProgramInstalled "rg") {
                 $rgParams = [List[string]]("--line-number", "--no-heading", "--color=always", "--smart-case")
                 $initParams = [List[string]]::new($rgParams)
@@ -455,6 +467,9 @@ function ProcessCommand {
             $fzfParams = [List[string]]("--height=40%", "--prompt=:${PSItem} ")
             if ($s_settings.preview) {
                 $fzfParams.Add("--preview=pwsh -NoProfile -File ${s_helperFile} ${s_tempSettingsFile} preview {}")
+            }
+            if ($s_settings.cyclic) {
+                $fzfParams.Add("--cycle")
             }
             $location = $s_register.bookmark | fzf $s_fzfDefaultParams $fzfParams
             if ($LASTEXITCODE -eq 0) {
@@ -558,7 +573,9 @@ function ChangeSetting {
             [SettingEntry]::new("details", "show directory details on"),
             [SettingEntry]::new("nodetails", "show directory details off"),
             [SettingEntry]::new("hidden", "show hidden files on"),
-            [SettingEntry]::new("nohidden", "show hidden files off")
+            [SettingEntry]::new("nohidden", "show hidden files off"),
+            [SettingEntry]::new("cyclic", "cyclic scroll on"),
+            [SettingEntry]::new("nocyclic", "cyclic scroll off")
         )
         $sortEntries = [List[SettingEntry]](
             [SettingEntry]::new("default", "sort by default"),
@@ -583,6 +600,9 @@ function ChangeSetting {
         $displays.Add([string]::Format("{0,-15} : {1}", "[$($entry.id)]", $entry.description))
     }
     $fzfParams = ("--height=40%", "--prompt=:${PSItem} ", "--exact")
+    if ($s_settings.cyclic) {
+        $fzfParams.Add("--cycle")
+    }
     $output = $displays | fzf $s_fzfDefaultParams $fzfParams
     if ($LASTEXITCODE -ne 0) {
         return
@@ -600,6 +620,10 @@ function ChangeSetting {
         }
         { $PSItem.EndsWith("hidden") } {
             $s_settings.showHidden = -not $PSItem.StartsWith("no")
+            break
+        }
+        { $PSItem.EndsWith("cyclic") } {
+            $s_settings.cyclic = -not $PSItem.StartsWith("no")
             break
         }
         { $PSItem.StartsWith("sort") } {

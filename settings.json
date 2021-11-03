@@ -2,5 +2,6 @@
     "preview": true,
     "showDetails": true,
     "showHidden": false,
+    "cyclic": false,
     "sortBy": "default"
 }
