@@ -49,6 +49,14 @@
             "expression": "Write-Output \"{0}\""
         },
         {
+            "id": "hash",
+            "aliases": ["sha1"],
+            "type": "file",
+            "description": "compute SHA1 for '{0}'",
+            "multiSupport": true,
+            "expression": "Get-FileHash -Algorithm SHA1 -Path \"{0}\""
+        },
+        {
             "id": "vi",
             "type": "file",
             "description": "open '{0}' with vi",
