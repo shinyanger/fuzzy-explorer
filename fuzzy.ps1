@@ -106,6 +106,9 @@ function ListDirectory {
                 $outstr = $item | Format-Table -View children -HideTableHeaders | Out-String
                 $fields = $outstr.Split([System.Environment]::NewLine)
                 $index = $fields[3].LastIndexOf($item.Name)
+                if ($index -lt 0) {
+                    $index = 50
+                }
                 $row = $fields[3].Substring(0, $index) + ".."
             }
             $entries[$row] = ".."
