@@ -103,7 +103,7 @@ function ListDirectory {
             $item = Get-Item . -Force
             $row = ".."
             if ($s_settings.showDetails) {
-                $outstr = $item | Format-Table -HideTableHeaders | Out-String
+                $outstr = $item | Format-Table -View children -HideTableHeaders | Out-String
                 $fields = $outstr.Split([System.Environment]::NewLine)
                 $index = $fields[3].LastIndexOf($item.Name)
                 $row = $fields[3].Substring(0, $index) + ".."
