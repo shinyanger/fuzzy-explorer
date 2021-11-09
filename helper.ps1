@@ -23,10 +23,7 @@ function Preview {
         $items = Get-ChildItem $selectedFile -Force -Attributes $attributes
         if ($?) {
             if ($s_settings.showDetails) {
-                $rows = GetDirHeader
-                foreach ($row in $rows) {
-                    FormatColor $row -FgColor $s_colors.header
-                }
+                GetDirHeader
             }
             $items = SortDir $items
             $rows = GetDirRows $items
