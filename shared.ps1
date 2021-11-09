@@ -1,13 +1,10 @@
-$s_fgCode = "38;5;"
-$s_bgCode = "48;5;"
-
 $s_colors = [PSCustomObject]@{
-    shortcut = 203
-    file = 48
-    directory = 81
-    hidden = 149
-    highlight = 236
-    lineNumber = 238
+    shortcut   = 0xff5f5f # 203
+    file       = 0x00ff87 # 48
+    directory  = 0x5fd7ff # 81
+    hidden     = 0xafd75f # 149
+    highlight  = 0x303030 # 236
+    lineNumber = 0x444444 # 238
 }
 
 class Settings {
@@ -31,17 +28,18 @@ function FormatColor {
     [OutputType([string])]
     param (
         [string]$content,
-        [short]$FgColor = -1,
-        [short]$BgColor = -1
+        [int]$FgColor = -1,
+        [int]$BgColor = -1
     )
-    if (($FgColor -ge 0) -and ($BgColor -ge 0)) {
-        return [string]::Format("`e[{0}{1};{2}{3}m{4}`e[0m", $s_fgCode, $FgColor, $s_bgCode, $BgColor, $content)
+    $styleColor = [string]::Empty
+    if ($FgColor -ge 0) {
+        $styleColor += $PSStyle.Foreground.FromRgb($FgColor)
     }
-    elseif (($FgColor -ge 0)) {
-        return [string]::Format("`e[{0}{1}m{2}`e[0m", $s_fgCode, $FgColor, $content)
+    if ($BgColor -ge 0) {
+        $styleColor += $PSStyle.Background.FromRgb($BgColor)
     }
-    elseif ($BgColor -ge 0) {
-        return [string]::Format("`e[{0}{1}m{2}`e[0m", $s_bgCode, $BgColor, $content)
+    if ($styleColor) {
+        return [string]::Format("{0}{1}{2}", $styleColor, $content, $PSStyle.Reset)
     }
     else {
         return $content
