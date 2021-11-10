@@ -82,6 +82,7 @@ function GetDirRows {
             return $items.Name
         }
     }
+    return [List[string]]::new()
 }
 
 function ColorizeRows {

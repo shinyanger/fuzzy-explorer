@@ -22,12 +22,20 @@ function Preview {
         $attributes = GetDirAttributes
         $items = Get-ChildItem $selectedFile -Force -Attributes $attributes
         if ($?) {
+            $displays = [List[string]]::new()
             if ($s_settings.showDetails) {
-                GetDirHeader
+                $rows = [List[string]](GetDirHeader)
+                $displays.AddRange($rows)
             }
             $items = SortDir $items
-            $rows = GetDirRows $items
-            ColorizeRows $items $rows
+            $rows = [List[string]](GetDirRows $items)
+            $rows = [List[string]](ColorizeRows $items $rows)
+            if ($rows.Count -gt 0) {
+                $displays.AddRange($rows)
+            }
+            foreach ($display in $displays) {
+                [System.Console]::WriteLine($display)
+            }
         }
     }
     elseif (IsProgramInstalled "bat") {
@@ -102,4 +110,5 @@ function FuzzyHelper {
     }
 }
 
+$PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::Ansi
 FuzzyHelper @args
