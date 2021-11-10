@@ -104,15 +104,14 @@ function FuzzyHelper {
             break
         }
         "search" {
+            $query = [string]::Empty
             if ($args.Count -gt 2) {
                 $query = $args[2]
             }
-            if ([string]::IsNullOrEmpty($query)) {
-                $query = "^"
-            }
             $output = Get-ChildItem -File -Recurse -Attributes !System | Select-String -Pattern $query
             if ($output) {
-                ($output | Out-String).Trim()
+                $display = ($output | Out-String).Trim()
+                [System.Console]::WriteLine($display)
             }
             break
         }
