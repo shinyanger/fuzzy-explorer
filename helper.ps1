@@ -53,16 +53,25 @@ function Preview {
         if ($lineNumber) {
             $content = [System.IO.File]::ReadAllLines($fileName)
             $count = $content.Count
+            $displays = [List[string]]::new()
             if ($lineNumber -gt 1) {
                 for ($i = 0; $i -lt $lineNumber - 1; $i++) {
-                    & $formatter
+                    $row = & $formatter
+                    $displays.Add($row)
                 }
             }
-            [string]::Format($lineFormat, $lineNumber, (FormatColor $content[$lineNumber - 1] -BgColor $s_colors.highlight))
+            & {
+                $row = [string]::Format($lineFormat, $lineNumber, (FormatColor $content[$lineNumber - 1] -BgColor $s_colors.highlight))
+                $displays.Add($row)
+            }
             if ($lineNumber -lt $count) {
                 for ($i = $lineNumber; $i -lt $count; $i++) {
-                    & $formatter
+                    $row = & $formatter
+                    $displays.Add($row)
                 }
+            }
+            foreach ($display in $displays) {
+                [System.Console]::WriteLine($display)
             }
         }
         else {
@@ -75,7 +84,8 @@ function Preview {
                 }
             }
             for ($i = 0; $i -lt $count; $i++) {
-                & $formatter
+                $display = & $formatter
+                [System.Console]::WriteLine($display)
             }
         }
     }
