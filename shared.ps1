@@ -50,7 +50,7 @@ function GetDirHeader {
     [OutputType([List[string]])]
     param ()
     if (-not $s_dirHeader) {
-        $outStr = Get-Item ~ | Format-Table -View children | Out-String
+        $outStr = Get-Item ~ | Format-Table -View children | Out-String -Width 200
         $fields = $outStr.Split([System.Environment]::NewLine)
         $script:s_dirHeader = $fields[3..4]
     }
@@ -73,7 +73,7 @@ function GetDirRows {
     )
     if ($items.Count -gt 0) {
         if ($s_settings.showDetails) {
-            $outStr = $items | Format-Table -View children -HideTableHeaders | Out-String
+            $outStr = $items | Format-Table -View children -HideTableHeaders | Out-String -Width 200
             $fields = $outStr.TrimEnd().Split([System.Environment]::NewLine)
             $count = $fields.Count
             return $fields[3..($count - 1)]
