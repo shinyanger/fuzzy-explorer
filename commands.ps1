@@ -13,7 +13,7 @@ class Command : System.ICloneable {
     [string]$description
     [string]$shortcut
     [bool]$multiSupport
-    [scriptblock]$prerequisite
+    [scriptblock]$predicate
     [scriptblock]$expression
     Command() {
         $this.Init()
@@ -33,7 +33,7 @@ class Command : System.ICloneable {
         $this.aliases = [List[string]]::new()
         $this.shortcut = [string]::Empty
         $this.multiSupport = $false
-        $this.prerequisite = { $true }
+        $this.predicate = { $true }
     }
     hidden CopyProperties([object]$clone) {
         $properties = Get-Member -InputObject $this -MemberType Property
@@ -49,11 +49,11 @@ class Command : System.ICloneable {
 }
 
 class ExternalCommand : Command {
-    [string]$prerequisite
+    [string]$predicate
     [string]$expression
     ExternalCommand() : base() {
         $this.internal = $false
-        $this.prerequisite = "`$true"
+        $this.predicate = "`$true"
     }
     [object]Clone() {
         $clone = [ExternalCommand]::new()
@@ -215,7 +215,7 @@ class Extensions {
     #region command mark
     & {
         $command = [Command]::new("mark", [CommandType]::common, "add current path in bookmark")
-        $command.prerequisite = {
+        $command.predicate = {
             return (-not $s_register.bookmark.Contains($PWD.ToString()))
         }
         $command.expression = {
@@ -227,7 +227,7 @@ class Extensions {
     #region command unmark
     & {
         $command = [Command]::new("unmark", [CommandType]::common, "remove current path in bookmark")
-        $command.prerequisite = {
+        $command.predicate = {
             return $s_register.bookmark.Contains($PWD.ToString())
         }
         $command.expression = {
@@ -336,7 +336,7 @@ class Extensions {
     & {
         $command = [Command]::new("edit", [CommandType]::file, "open '{0}' with editor")
         $command.shortcut = "ctrl-e"
-        $command.prerequisite = {
+        $command.predicate = {
             return (-not [string]::IsNullOrEmpty($env:EDITOR))
         }
         $command.expression = {
@@ -348,7 +348,7 @@ class Extensions {
     #region command paste
     & {
         $command = [Command]::new("paste", [CommandType]::common, "paste files in current directory")
-        $command.prerequisite = {
+        $command.predicate = {
             return ($s_register.clipboard.Count -gt 0)
         }
         $command.expression = {
@@ -388,13 +388,13 @@ function ListCommands {
     $commands = [List[Command]]::new()
     foreach ($command in $s_commands) {
         if ($command.internal) {
-            $prerequisite = Invoke-Command $command.prerequisite
+            $predicateResult = Invoke-Command $command.predicate
         }
         else {
-            $expression = [scriptblock]::Create($command.prerequisite)
-            $prerequisite = Invoke-Command $expression
+            $expression = [scriptblock]::Create($command.predicate)
+            $predicateResult = Invoke-Command $expression
         }
-        if (-not $prerequisite) {
+        if (-not $predicateResult) {
             continue
         }
         if ($command.type.Equals([CommandType]::file.ToString())) {
