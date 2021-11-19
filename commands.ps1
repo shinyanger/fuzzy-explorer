@@ -398,19 +398,20 @@ function ListCommands {
             continue
         }
         if ($command.type.Equals([CommandType]::file.ToString())) {
-            if ($selectedFiles.Count -gt 0) {
-                if (($selectedFiles.Count -eq 1) -or $command.multiSupport) {
-                    $names = & {
-                        $names = [List[string]]::new()
-                        foreach ($selectedFile in $selectedFiles) {
-                            $names.Add($selectedFile.Name)
-                        }
-                        [string]::Join(';', $names)
+            if ($selectedFiles.Count -eq 0) {
+                continue
+            }
+            if (($selectedFiles.Count -eq 1) -or $command.multiSupport) {
+                $names = & {
+                    $names = [List[string]]::new()
+                    foreach ($selectedFile in $selectedFiles) {
+                        $names.Add($selectedFile.Name)
                     }
-                    $fileCommand = $command.Clone()
-                    $fileCommand.description = [string]::Format($command.description, $names)
-                    $commands.Add($fileCommand)
+                    [string]::Join(';', $names)
                 }
+                $fileCommand = $command.Clone()
+                $fileCommand.description = [string]::Format($command.description, $names)
+                $commands.Add($fileCommand)
             }
         }
         else {
