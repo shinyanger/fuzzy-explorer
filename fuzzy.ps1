@@ -268,7 +268,7 @@ function ChangeSetting {
         }
         Default {}
     }
-    & {
+    if ([System.IO.File]::Exists($s_tempSettingsFile)) {
         $content = [JsonSerializer]::Serialize($s_settings, [Settings])
         [System.IO.File]::WriteAllLines($s_tempSettingsFile, $content)
     }
@@ -288,9 +288,9 @@ function Initialize {
         $content = [System.IO.File]::ReadAllLines($s_bookmarkFile)
         $s_register.bookmark = [JsonSerializer]::Deserialize($content, [List[string]])
     }
-    $script:s_settings = & {
+    & {
         $content = [System.IO.File]::ReadAllLines($s_settingsFile)
-        [JsonSerializer]::Deserialize($content, [Settings])
+        $script:s_settings = [JsonSerializer]::Deserialize($content, [Settings])
     }
     & {
         $content = [System.IO.File]::ReadAllLines($s_extensionsFile)
@@ -311,7 +311,9 @@ function Finalize {
         $content = [JsonSerializer]::Serialize($s_register.bookmark, [List[string]], $options)
         [System.IO.File]::WriteAllLines($s_bookmarkFile, $content)
     }
-    Remove-Item -Path $s_tempSettingsFile -Force
+    if ([System.IO.File]::Exists($s_tempSettingsFile)) {
+        Remove-Item -Path $s_tempSettingsFile -Force
+    }
     & {
         $PSStyle.OutputRendering = $s_rendering
     }

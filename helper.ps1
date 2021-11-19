@@ -15,9 +15,9 @@ function Preview {
     }
     $selectedFile = Get-Item $fileName -Force
     if ($selectedFile.PSIsContainer) {
-        $script:s_settings = & {
+        if ([System.IO.File]::Exists($s_tempSettingsFile)) {
             $content = [System.IO.File]::ReadAllLines($s_tempSettingsFile)
-            [JsonSerializer]::Deserialize($content, [Settings])
+            $script:s_settings = [JsonSerializer]::Deserialize($content, [Settings])
         }
         $attributes = GetDirAttributes
         $items = Get-ChildItem $selectedFile -Force -Attributes $attributes
