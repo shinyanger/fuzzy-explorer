@@ -53,7 +53,7 @@ class ExternalCommand : Command {
     [string]$expression
     ExternalCommand() : base() {
         $this.internal = $false
-        $this.prerequisite = "{ `$true }"
+        $this.prerequisite = "`$true"
     }
     [object]Clone() {
         $clone = [ExternalCommand]::new()
