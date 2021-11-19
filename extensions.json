@@ -60,12 +60,14 @@
             "id": "vi",
             "type": "file",
             "description": "open '{0}' with vi",
+            "prerequisite": "IsProgramInstalled vi",
             "expression": "vi \"{0}\""
         },
         {
             "id": "code",
             "type": "file",
             "description": "open '{0}' with code",
+            "prerequisite": "IsProgramInstalled code",
             "expression": "code --new-window \"{0}\""
         }
     ]
