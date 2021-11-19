@@ -85,9 +85,7 @@ function ListDirectory {
     }
     $expect = & {
         $expect = [List[string]]("left", "right", ":", "f5")
-        $shortcuts = [List[string]]("ctrl-q", "ctrl-e", "ctrl-p", "ctrl-j", "del", "f1", "f2")
-        $expect.AddRange($shortcuts)
-        foreach ($command in $s_extensions.commands) {
+        foreach ($command in $s_commands) {
             if ($command.shortcut) {
                 $expect.Add($command.shortcut)
             }
@@ -294,12 +292,15 @@ function Initialize {
         $content = [System.IO.File]::ReadAllLines($s_settingsFile)
         [JsonSerializer]::Deserialize($content, [Settings])
     }
-    $script:s_extensions = & {
+    & {
         $content = [System.IO.File]::ReadAllLines($s_extensionsFile)
-        [JsonSerializer]::Deserialize($content, [Extensions])
+        $extensions = [JsonSerializer]::Deserialize($content, [Extensions])
+        $s_commands.AddRange($extensions.commands)
     }
-    $script:s_tempSettingsFile = (New-TemporaryFile).FullName
-    Copy-Item -Path $s_settingsFile -Destination $s_tempSettingsFile -Force
+    & {
+        $script:s_tempSettingsFile = (New-TemporaryFile).FullName
+        Copy-Item -Path $s_settingsFile -Destination $s_tempSettingsFile -Force
+    }
     $script:s_continue = $true
 }
 
