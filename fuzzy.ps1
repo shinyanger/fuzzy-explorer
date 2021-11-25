@@ -45,7 +45,7 @@ function ListDirectory {
             $displays.AddRange($rows)
         }
         & {
-            $item = Get-Item . -Force
+            $item = Get-Item -Path . -Force
             $row = ".."
             if ($s_settings.showDetails) {
                 $outstr = $item | Format-Table -View children -HideTableHeaders | Out-String -Width 200
@@ -128,7 +128,7 @@ function ListDirectory {
         for ($i = 1; $i -lt $output.Count; $i++) {
             $fileName = $entries[$output[$i]]
             if ((-not $fileName.Equals("..")) -or ([List[string]]("enter", "right")).Contains($result.operation)) {
-                $item = Get-Item $fileName -Force
+                $item = Get-Item -LiteralPath $fileName -Force
                 $result.selectedFiles.Add($item)
             }
         }

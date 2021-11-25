@@ -13,7 +13,7 @@ function Preview {
         $fields = $fileName.Split(" -> ")
         $fileName = $fields[0]
     }
-    $selectedFile = Get-Item $fileName -Force
+    $selectedFile = Get-Item -LiteralPath $fileName -Force
     if ($selectedFile.PSIsContainer) {
         if ([System.IO.File]::Exists($s_tempSettingsFile)) {
             $content = [System.IO.File]::ReadAllLines($s_tempSettingsFile)

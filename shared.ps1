@@ -50,7 +50,7 @@ function GetDirHeader {
     [OutputType([List[string]])]
     param ()
     if (-not $s_dirHeader) {
-        $outStr = Get-Item ~ | Format-Table -View children | Out-String -Width 200
+        $outStr = Get-Item -Path ~ | Format-Table -View children | Out-String -Width 200
         $fields = $outStr.Split([System.Environment]::NewLine)
         $script:s_dirHeader = $fields[3..4]
     }
