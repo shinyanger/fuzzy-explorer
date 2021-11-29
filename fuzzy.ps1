@@ -50,10 +50,7 @@ function ListDirectory {
             if ($s_settings.showDetails) {
                 $outstr = $item | Format-Table -View children -HideTableHeaders | Out-String -Width 200
                 $fields = $outstr.Split([System.Environment]::NewLine)
-                $index = $fields[3].LastIndexOf($item.Name)
-                if ($index -lt 0) {
-                    $index = 50
-                }
+                $index = 50
                 $row = $fields[3].Substring(0, $index) + ".."
             }
             $entries[$row] = ".."
