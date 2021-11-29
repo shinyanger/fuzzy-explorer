@@ -50,8 +50,7 @@ function ListDirectory {
             if ($s_settings.showDetails) {
                 $outstr = $item | Format-Table -View children -HideTableHeaders | Out-String -Width 200
                 $fields = $outstr.Split([System.Environment]::NewLine)
-                $index = 50
-                $row = $fields[3].Substring(0, $index) + ".."
+                $row = $fields[3].Substring(0, $s_nameIndex) + ".."
             }
             $entries[$row] = ".."
             $row = ColorizeRows $item $row
@@ -64,7 +63,8 @@ function ListDirectory {
         }
         $rows = [List[string]](GetDirRows $items)
         for ($i = 0; $i -lt $items.Count; $i++) {
-            $entries[$rows[$i]] = $items[$i].Name
+            $row = $rows[$i]
+            $entries[$row] = $items[$i].Name
         }
         $rows = [List[string]](ColorizeRows $items $rows)
         if ($rows.Count -gt 0) {
@@ -123,7 +123,8 @@ function ListDirectory {
         }
         $result.operation = $output[0]
         for ($i = 1; $i -lt $output.Count; $i++) {
-            $fileName = $entries[$output[$i]]
+            $row = $output[$i]
+            $fileName = $entries[$row]
             if ((-not $fileName.Equals("..")) -or ([List[string]]("enter", "right")).Contains($result.operation)) {
                 $item = Get-Item -LiteralPath $fileName -Force
                 $result.selectedFiles.Add($item)

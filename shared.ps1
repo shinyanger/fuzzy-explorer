@@ -53,6 +53,8 @@ function GetDirHeader {
         $outStr = Get-Item -Path ~ | Format-Table -View children | Out-String -Width 200
         $fields = $outStr.Split([System.Environment]::NewLine)
         $script:s_dirHeader = $fields[3..4]
+        $row = $s_dirHeader[0]
+        $script:s_nameIndex = $row.IndexOf("Name") - $row.IndexOf("Mode")
     }
     return $s_dirHeader
 }
