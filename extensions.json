@@ -33,6 +33,12 @@
             "expression": "Set-Clipboard -Value $PWD.ToString()"
         },
         {
+            "id": "goto",
+            "type": "common",
+            "description": "go to path in clipboard",
+            "expression": "$path = Get-Clipboard -Raw; if ([System.IO.Directory]::Exists($path)) { Set-Location $path }"
+        },
+        {
             "id": "exp",
             "aliases": ["reveal"],
             "type": "common",
