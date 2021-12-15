@@ -9,6 +9,7 @@ $s_settingsFile = [System.IO.Path]::Join($PSScriptRoot, "settings.json")
 $s_extensionsFile = [System.IO.Path]::Join($PSScriptRoot, "extensions.json")
 $s_bookmarkFile = [System.IO.Path]::Join($PSScriptRoot, "bookmark.json")
 $s_fzfDefaultParams = ("--layout=reverse", "--border", "--info=inline")
+$s_pwshDefaultParams = ("-NoLogo", "-NoProfile", "-File", $s_helperFile)
 
 enum ClipboardMode {
     None
@@ -105,12 +106,14 @@ function ListDirectory {
             )
         )
         if ($s_settings.preview) {
-            $fzfParams.Add("--preview=pwsh -NoProfile -File ${s_helperFile} ${s_tempSettingsFile} preview {3..}")
+            $pwshParams = ($s_tempSettingsFile, "preview", "{3..}")
+            $fzfParams.Add("--preview=pwsh ${s_pwshDefaultParams} ${pwshParams}")
         }
     }
     else {
         if ($s_settings.preview) {
-            $fzfParams.Add("--preview=pwsh -NoProfile -File ${s_helperFile} ${s_tempSettingsFile} preview {}")
+            $pwshParams = ($s_tempSettingsFile, "preview", "{}")
+            $fzfParams.Add("--preview=pwsh ${s_pwshDefaultParams} ${pwshParams}")
         }
     }
     if ($s_settings.cyclic) {

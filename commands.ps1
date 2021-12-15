@@ -137,7 +137,8 @@ class Extensions {
         $command.expression = {
             $fzfParams = [List[string]]("--height=80%", "--prompt=:${PSItem} ")
             if ($s_settings.preview) {
-                $fzfParams.Add("--preview=pwsh -NoProfile -File ${s_helperFile} ${s_tempSettingsFile} preview {}")
+                $pwshParams = ($s_tempSettingsFile, "preview", "{}")
+                $fzfParams.Add("--preview=pwsh ${s_pwshDefaultParams} ${pwshParams}")
             }
             if ($s_settings.cyclic) {
                 $fzfParams.Add("--cycle")
@@ -175,9 +176,10 @@ class Extensions {
                 "--phony"
             )
             if ($s_settings.preview) {
+                $pwshParams = ($s_tempSettingsFile, "preview", "{1}", "{2}")
                 $fzfParams.AddRange(
                     [List[string]](
-                        "--preview=pwsh -NoProfile -File ${s_helperFile} ${s_tempSettingsFile} preview {1} {2}",
+                        "--preview=pwsh ${s_pwshDefaultParams} ${pwshParams}",
                         "--preview-window=+{2}-/2"
                     )
                 )
@@ -195,7 +197,8 @@ class Extensions {
                 $output = rg $initParams | fzf $s_fzfDefaultParams $fzfParams
             }
             else {
-                $fzfParams.Add("--bind=change:reload:pwsh -NoProfile -File ${s_helperFile} ${s_tempSettingsFile} search {q}")
+                $pwshParams = ($s_tempSettingsFile, "search", "{q}")
+                $fzfParams.Add("--bind=change:reload:pwsh ${s_pwshDefaultParams} ${pwshParams}")
                 $output = $null | fzf $s_fzfDefaultParams $fzfParams
             }
             if ($LASTEXITCODE -eq 0) {
@@ -243,7 +246,8 @@ class Extensions {
         $command.expression = {
             $fzfParams = [List[string]]("--height=40%", "--prompt=:${PSItem} ")
             if ($s_settings.preview) {
-                $fzfParams.Add("--preview=pwsh -NoProfile -File ${s_helperFile} ${s_tempSettingsFile} preview {}")
+                $pwshParams = ($s_tempSettingsFile, "preview", "{}")
+                $fzfParams.Add("--preview=pwsh ${s_pwshDefaultParams} ${pwshParams}")
             }
             if ($s_settings.cyclic) {
                 $fzfParams.Add("--cycle")
