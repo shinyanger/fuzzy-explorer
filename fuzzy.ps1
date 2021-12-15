@@ -273,10 +273,6 @@ function ChangeSetting {
 }
 
 function Initialize {
-    & {
-        $script:s_rendering = $PSStyle.OutputRendering
-        $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::Ansi
-    }
     $script:s_register = [PSCustomObject]@{
         clipboard = [List[System.IO.FileSystemInfo]]::new()
         clipMode  = [ClipboardMode]::None
@@ -311,9 +307,6 @@ function Finalize {
     }
     if ([System.IO.File]::Exists($s_tempSettingsFile)) {
         Remove-Item -Path $s_tempSettingsFile -Force
-    }
-    & {
-        $PSStyle.OutputRendering = $s_rendering
     }
 }
 

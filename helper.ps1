@@ -119,5 +119,4 @@ function FuzzyHelper {
     }
 }
 
-$PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::Ansi
 FuzzyHelper @args
