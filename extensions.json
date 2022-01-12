@@ -1,4 +1,5 @@
 {
+    "$schema": "https://raw.githubusercontent.com/shinyanger/fuzzy-explorer/main/extensions.schema.json",
     "commands": [
         {
             "id": "home",

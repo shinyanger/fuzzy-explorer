@@ -1,0 +1,55 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema",
+    "$id": "https://raw.githubusercontent.com/shinyanger/fuzzy-explorer/main/extensions.schema.json",
+    "title": "extensions",
+    "description": "fuzzy-explorer extensions schema",
+    "type": "object",
+    "properties": {
+        "commands": {
+            "description": "external commands",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "command id",
+                    "type": "string"
+                },
+                "aliases": {
+                    "description": "command aliases",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "description": "command type",
+                    "type": "string",
+                    "enum": [
+                        "common",
+                        "file"
+                    ]
+                },
+                "description": {
+                    "description": "command description",
+                    "type": "string"
+                },
+                "shortcut": {
+                    "description": "command shortcut",
+                    "type": "string"
+                },
+                "multiSupport": {
+                    "description": "command multiple selection support",
+                    "type": "boolean"
+                },
+                "predicate": {
+                    "description": "command predicate",
+                    "type": "string"
+                },
+                "expression": {
+                    "description": "command expression",
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "required": ["id", "type", "description", "expression"]
+}
