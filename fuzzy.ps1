@@ -128,6 +128,11 @@ function ListDirectory {
         for ($i = 1; $i -lt $output.Count; $i++) {
             $row = $output[$i]
             $fileName = $entries[$row]
+            $fullName = [System.IO.Path]::Join($PWD.ToString(), $fileName)
+            if (-not ([System.IO.File]::Exists($fullName) -or [System.IO.Directory]::Exists($fullName)))
+            {
+                continue
+            }
             if ((-not $fileName.Equals("..")) -or ([List[string]]("enter", "right")).Contains($result.operation)) {
                 $item = Get-Item -LiteralPath $fileName -Force
                 $result.selectedFiles.Add($item)
