@@ -18,18 +18,6 @@ enum ClipboardMode {
     Link
 }
 
-class SettingEntry {
-    [string]$id
-    [string]$description
-    SettingEntry(
-        [string]$id,
-        [string]$description
-    ) {
-        $this.id = $id
-        $this.description = $description
-    }
-}
-
 function ListDirectory {
     $result = [PSCustomObject]@{
         operation     = [string]::Empty
@@ -203,38 +191,30 @@ function ProcessOperation {
 }
 
 function ChangeSetting {
-    $entries = & {
-        $entries = [List[SettingEntry]](
-            [SettingEntry]::new("preview", "show preview window on"),
-            [SettingEntry]::new("nopreview", "show preview window off"),
-            [SettingEntry]::new("details", "show directory details on"),
-            [SettingEntry]::new("nodetails", "show directory details off"),
-            [SettingEntry]::new("hidden", "show hidden files on"),
-            [SettingEntry]::new("nohidden", "show hidden files off"),
-            [SettingEntry]::new("cyclic", "cyclic scroll on"),
-            [SettingEntry]::new("nocyclic", "cyclic scroll off")
-        )
-        $sortEntries = [List[SettingEntry]](
-            [SettingEntry]::new("default", "sort by default"),
-            [SettingEntry]::new("nameasc", "sort by name ascending"),
-            [SettingEntry]::new("namedesc", "sort by name descending"),
-            [SettingEntry]::new("sizeasc", "sort by size ascending"),
-            [SettingEntry]::new("sizedesc", "sort by size descending"),
-            [SettingEntry]::new("timeasc", "sort by time ascending"),
-            [SettingEntry]::new("timedesc", "sort by time descending")
-        )
-        foreach ($entry in $sortEntries) {
-            $entry.id = [string]::Format("sort={0}", $entry.id)
-            $entries.Add($entry)
-        }
+    $entries = [Dictionary[string, string]]::new()
+    & {
+        $entries.Add("preview", "show preview window on")
+        $entries.Add("nopreview", "show preview window off")
+        $entries.Add("details", "show directory details on")
+        $entries.Add("nodetails", "show directory details off")
+        $entries.Add("hidden", "show hidden files on")
+        $entries.Add("nohidden", "show hidden files off")
+        $entries.Add("cyclic", "cyclic scroll on")
+        $entries.Add("nocyclic", "cyclic scroll off")
+        $entries.Add("sort=default", "sort by default"),
+        $entries.Add("sort=nameasc", "sort by name ascending"),
+        $entries.Add("sort=namedesc", "sort by name descending"),
+        $entries.Add("sort=sizeasc", "sort by size ascending"),
+        $entries.Add("sort=sizedesc", "sort by size descending"),
+        $entries.Add("sort=timeasc", "sort by time ascending"),
+        $entries.Add("sort=timedesc", "sort by time descending")
         if ($env:EDITOR) {
-            $entries.Add([SettingEntry]::new("all", "edit settings file"))
+            $entries.Add("all", "edit settings file")
         }
-        $entries
     }
     $displays = [List[string]]::new()
-    foreach ($entry in $entries) {
-        $displays.Add([string]::Format("{0,-15} : {1}", "[$($entry.id)]", $entry.description))
+    foreach ($entry in $entries.GetEnumerator()) {
+        $displays.Add([string]::Format("{0,-15} : {1}", "[$($entry.Key)]", $entry.Value))
     }
     $fzfParams = ("--height=40%", "--prompt=:${PSItem} ", "--exact")
     if ($s_settings.cyclic) {
