@@ -64,6 +64,13 @@
             "expression": "Get-FileHash -Algorithm SHA1 -Path \"{0}\""
         },
         {
+            "id": "size",
+            "type": "file",
+            "description": "get size of '{0}'",
+            "predicate": "return $selectedFiles[0].PSIsContainer",
+            "expression": "Get-ChildItem -Path \"{0}\" -Recurse | Measure-Object -Sum Length | Select-Object -ExpandProperty Sum"
+        },
+        {
             "id": "nvim",
             "type": "file",
             "description": "open '{0}' with nvim",
