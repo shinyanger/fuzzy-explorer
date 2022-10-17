@@ -94,6 +94,13 @@ function Preview {
 function FuzzyHelper {
     $script:s_tempSettingsFile = $args[0]
     switch ($args[1]) {
+        "preview-detail" {
+            $fileName = $args[2]
+            $index = $args[3]
+            $fileName = $fileName.Substring($index)
+            Preview $fileName
+            break
+        }
         "preview" {
             $fileName = $args[2]
             $lineNumber = 0

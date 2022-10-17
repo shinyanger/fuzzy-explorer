@@ -86,23 +86,16 @@ function ListDirectory {
         "--expect=${expect}"
     )
     if ($s_settings.showDetails) {
-        $fzfParams.AddRange(
-            [List[string]](
-                "--header-lines=2",
-                "--nth=3..",
-                "--delimiter=\s{2,}\d*\s"
-            )
-        )
-        if ($s_settings.preview) {
-            $pwshParams = ($s_tempSettingsFile, "preview", "{3..}")
-            $fzfParams.Add("--preview=pwsh ${s_pwshDefaultParams} ${pwshParams}")
-        }
+        $fzfParams.Add("--header-lines=2")
     }
-    else {
-        if ($s_settings.preview) {
-            $pwshParams = ($s_tempSettingsFile, "preview", "{}")
-            $fzfParams.Add("--preview=pwsh ${s_pwshDefaultParams} ${pwshParams}")
+    if ($s_settings.preview) {
+        if ($s_settings.showDetails) {
+            $pwshParams = ($s_tempSettingsFile, "preview-detail", "+{}", ($s_nameIndex + 1))
         }
+        else {
+            $pwshParams = ($s_tempSettingsFile, "preview", "{}")
+        }
+        $fzfParams.Add("--preview=pwsh ${s_pwshDefaultParams} ${pwshParams}")
     }
     if ($s_settings.cyclic) {
         $fzfParams.Add("--cycle")
