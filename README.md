@@ -47,7 +47,3 @@ You may add custom commands in `extensions.json`.
 If `type` is `file`, the identifier `{0}` in `description` and `expression` will be replaced by selected file's name.
 
 The shortcut format need to follow `fzf`'s.
-
-## Troubleshooting
-### Cannot see preview
-If the time format in `LastWriteTime` field does not contain 'AM/PM', it is likely the locale is not set correctly. Check `$PSCulture` as well. The way to set locale depends on terminal.
