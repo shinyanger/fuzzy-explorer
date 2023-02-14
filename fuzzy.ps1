@@ -209,7 +209,7 @@ function ChangeSetting {
     foreach ($entry in $entries.GetEnumerator()) {
         $displays.Add([string]::Format("{0,-15} : {1}", "[$($entry.Key)]", $entry.Value))
     }
-    $fzfParams = ("--height=40%", "--prompt=:${PSItem} ", "--exact")
+    $fzfParams = ("--height=40%", "--prompt=:${PSItem} ", "--exact", "--no-sort")
     if ($s_settings.cyclic) {
         $fzfParams.Add("--cycle")
     }
