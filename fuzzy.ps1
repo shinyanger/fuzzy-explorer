@@ -87,7 +87,7 @@ function ListDirectory {
     )
     if ($s_settings.showDetails) {
         $fzfParams.Add("--header-lines=2")
-        $fzfParams.Add("--nth=5..")
+        $fzfParams.Add("--nth=4..")
     }
     if ($s_settings.preview) {
         if ($s_settings.showDetails) {
