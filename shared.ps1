@@ -61,9 +61,12 @@ function GetDirHeader {
 
 function GetDirAttributes {
     [OutputType([string])]
-    $attributes = "!System"
-    if (-not $s_settings.showHidden) {
-        $attributes = $attributes + "+!Hidden"
+    $attributes = [string]::Empty
+    if ($s_settings.showHidden) {
+        $attributes = "None"
+    }
+    else {
+        $attributes = "!Hidden+!System"
     }
     return $attributes
 }
